@@ -1,0 +1,70 @@
+{
+    "browser_cleaner.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Deep clean browser history, cache, cookies, bookmarks, and extensions"
+    },
+    "context_menu_cleaner.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Remove clutter from right-click context menu"
+    },
+    "empty_folder_cleaner.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Remove empty folders from user profile"
+    },
+    "system_cleanup.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Clean temp files, cache, and system junk"
+    },
+    "game_optimizer.bat": {
+        "category": "🎮 Gaming",
+        "description": "Optimize system for maximum gaming performance with NVIDIA tweaks"
+    },
+    "privacy_tweaker.bat": {
+        "category": "🛡️ Privacy",
+        "description": "Disable Windows telemetry, tracking, and data collection"
+    },
+    "windows_debloater.bat": {
+        "category": "🛡️ Privacy",
+        "description": "Remove Windows bloatware and disable unwanted features"
+    },
+    "dns_changer.bat": {
+        "category": "🌐 Network",
+        "description": "Quick switch DNS (Google, Cloudflare, OpenDNS, Quad9, AdGuard)"
+    },
+    "ip_information.bat": {
+        "category": "🌐 Network",
+        "description": "Display network info, IP addresses, gateway, DNS, and connections"
+    },
+    "network_diagnostics.bat": {
+        "category": "🌐 Network",
+        "description": "Diagnose and fix network connectivity issues"
+    },
+    "open_to_bios.bat": {
+        "category": "⚙️ System",
+        "description": "Restart computer directly into BIOS/UEFI settings"
+    },
+    "registry_backup.bat": {
+        "category": "⚙️ System",
+        "description": "Backup Windows registry and create system restore point"
+    },
+    "ssd_optimizer.bat": {
+        "category": "⚙️ System",
+        "description": "Optimize SSD with TRIM, disable defrag, improve lifespan"
+    },
+    "font_cache_rebuild.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Fix font rendering issues by rebuilding font cache"
+    },
+    "icon_cache_rebuild.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Fix corrupted desktop icons by rebuilding icon cache"
+    },
+    "search_rebuild.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Fix Windows Search not working by rebuilding search index"
+    },
+    "store_reset.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Fix Microsoft Store download issues by resetting Store"
+    }
+}

@@ -1,0 +1,3 @@
+::CATEGORY:Cleaning
+::DESCRIPTION:Deep clean browser history, cache, cookies, bookmarks, and extensions from Chrome, Edge, Firefox, Opera, and Brave
+@echo off
