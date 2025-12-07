@@ -1,6 +1,6 @@
 """Script Launcher - A modern GUI application for running scripts."""
 
-__version__ = "2.0.0"
+__version__ = "2.1.0"
 __author__ = "Script Launcher Team"
 
 from .app import Application, main
