@@ -23,7 +23,7 @@ class ScriptCache:
 class ThemeConfig:
     """Theme configuration."""
 
-    mode: str = "light"  # "light" or "dark"
+    mode: str = "dark"  # "light" or "dark"
     accent_color: str = "#0078d4"
     
     def __post_init__(self):

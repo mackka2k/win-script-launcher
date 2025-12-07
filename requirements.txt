@@ -2,6 +2,8 @@
 loguru>=0.7.0
 pydantic>=2.0.0
 watchdog>=3.0.0
+customtkinter>=5.2.0
+packaging>=23.0
 
 # Build
 pyinstaller>=6.3.0

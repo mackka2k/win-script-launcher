@@ -3,6 +3,8 @@
 import PyInstaller.__main__
 import shutil
 from pathlib import Path
+import customtkinter
+import os
 
 # Get project root
 PROJECT_ROOT = Path(__file__).parent
@@ -18,6 +20,9 @@ if BUILD_DIR.exists():
 
 print("Building Script Launcher executable...")
 
+# Get CustomTkinter path for data files
+ctk_path = os.path.dirname(customtkinter.__file__)
+
 # PyInstaller arguments
 args = [
     str(PROJECT_ROOT / "script_launcher.py"),  # Entry point
@@ -27,12 +32,18 @@ args = [
     f"--distpath={DIST_DIR}",  # Output directory
     f"--workpath={BUILD_DIR}",  # Build directory
     "--clean",  # Clean cache
+    # Add data files for CustomTkinter
+    f"--add-data={ctk_path};customtkinter/",
     # Add hidden imports
     "--hidden-import=loguru",
     "--hidden-import=pydantic",
     "--hidden-import=watchdog",
     "--hidden-import=watchdog.observers",
     "--hidden-import=watchdog.events",
+    "--hidden-import=customtkinter",
+    "--hidden-import=PIL",
+    "--hidden-import=PIL._tkinter_finder",
+    "--hidden-import=packaging",
 ]
 
 # Run PyInstaller

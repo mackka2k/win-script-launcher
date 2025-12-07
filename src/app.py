@@ -2,6 +2,7 @@
 
 import sys
 import tkinter as tk
+import customtkinter as ctk
 from pathlib import Path
 from tkinter import messagebox
 
@@ -62,7 +63,10 @@ class Application:
         self.script_executor = ScriptExecutor(timeout_seconds=self.config.execution.timeout_seconds)
 
         # Create UI
-        root = tk.Tk()
+        ctk.set_appearance_mode("Dark")
+        ctk.set_default_color_theme("dark-blue")
+        
+        root = ctk.CTk()
         self.main_window = MainWindow(root, self.config, self.script_manager, self.script_executor)
 
         # Setup file watcher only if enabled (lazy loading)
