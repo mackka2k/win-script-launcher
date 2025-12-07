@@ -88,8 +88,8 @@ class MainWindow:
         # Scripts area
         self._create_scripts_area(main_frame)
 
-        # Output area
-        self._create_output_area(main_frame)
+        # Output area - REMOVED (scripts run in their own windows)
+        # self._create_output_area(main_frame)
 
         # Control buttons
         self._create_controls(main_frame)
@@ -136,12 +136,11 @@ class MainWindow:
             relief=tk.SOLID,
             bd=1,
         )
-        scripts_frame.pack(fill=tk.BOTH, expand=False, pady=(0, 10))
+        scripts_frame.pack(fill=tk.BOTH, expand=True, pady=(0, 10))
 
         # Scrollable canvas
         canvas = tk.Canvas(
             scripts_frame,
-            height=200,
             bg=self.theme.colors.bg_secondary,
             highlightthickness=0,
             bd=0,
@@ -291,47 +290,17 @@ class MainWindow:
             messagebox.showinfo("Already Running", f"'{script.name}' is already running!")
             return
 
-        # Update UI
-        self.output_console.append(f"\n{'=' * 60}\n")
-        self.output_console.append(f"Running: {script.name}\n", "info")
-        self.output_console.append(f"{'=' * 60}\n")
-
-        # Execute script
+        # Execute script (runs in its own window)
         self.script_executor.execute_script(
-            script, output_callback=self._on_output, completion_callback=self._on_completion
+            script, output_callback=None, completion_callback=self._on_completion
         )
 
         # Update status
         self._update_execution_status()
 
-    def _on_output(self, line: str) -> None:
-        """Handle script output."""
-        # Determine tag based on content
-        tag = None
-        if "[STDERR]" in line or "error" in line.lower():
-            tag = "error"
-        elif "success" in line.lower() or "✓" in line:
-            tag = "success"
-        elif "warning" in line.lower() or "⚠" in line:
-            tag = "warning"
-
-        self.output_console.append(line, tag)
-
     def _on_completion(self, execution: ScriptExecution) -> None:
         """Handle script completion."""
         logger.info(f"Script completed: {execution.script.name} - {execution.status.value}")
-
-        # Show completion message
-        if execution.status.name == "SUCCESS":
-            self.output_console.append("\n✓ Script completed successfully!\n", "success")
-        elif execution.status.name == "FAILED":
-            self.output_console.append(
-                f"\n✗ Script failed: {execution.error_message}\n", "error"
-            )
-        elif execution.status.name == "TIMEOUT":
-            self.output_console.append("\n⏱️ Script timed out!\n", "warning")
-        elif execution.status.name == "CANCELLED":
-            self.output_console.append("\n⏹️ Script cancelled!\n", "warning")
 
         # Update status
         self._update_execution_status()
@@ -357,29 +326,14 @@ class MainWindow:
         if messagebox.askyesno("Stop Scripts", f"Stop {count} running script(s)?"):
             stopped = self.script_executor.cancel_all()
             logger.info(f"Stopped {stopped} script(s)")
-            self.output_console.append(f"\n⏹️ Stopped {stopped} script(s)\n", "warning")
 
     def _clear_output(self) -> None:
-        """Clear output console."""
-        self.output_console.clear()
+        """Clear output console (removed - no longer used)."""
+        pass
 
     def _copy_output(self) -> None:
-        """Copy output console content to clipboard."""
-        try:
-            # Get all text from the output console
-            output_text = self.output_console.get("1.0", tk.END)
-            
-            # Copy to clipboard
-            self.root.clipboard_clear()
-            self.root.clipboard_append(output_text)
-            self.root.update()  # Required for clipboard to work
-            
-            # Show confirmation in status bar
-            self.status_bar.set_status("Output copied to clipboard!", self.theme.colors.success)
-            logger.info("Output copied to clipboard")
-        except Exception as e:
-            logger.error(f"Failed to copy output: {e}")
-            messagebox.showerror("Error", f"Failed to copy output:\n{e}")
+        """Copy output console content to clipboard (removed - no longer used)."""
+        pass
 
     def _open_scripts_folder(self) -> None:
         """Open scripts folder in file explorer."""

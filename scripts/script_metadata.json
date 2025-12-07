@@ -66,5 +66,53 @@
     "store_reset.bat": {
         "category": "🔧 Quick Fixes",
         "description": "Fix Microsoft Store download issues by resetting Store"
+    },
+    "temp_cleaner.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Clean all temporary files, prefetch, and thumbnail cache"
+    },
+    "empty_downloads.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Clean Downloads folder with options for all files or by age"
+    },
+    "network_reset.bat": {
+        "category": "🌐 Network",
+        "description": "Complete network reset: TCP/IP, DNS, Winsock, and firewall"
+    },
+    "speed_test.bat": {
+        "category": "🌐 Network",
+        "description": "Test internet download speed and latency"
+    },
+    "mac_address_changer.bat": {
+        "category": "🌐 Network",
+        "description": "Change or reset MAC address (random or custom)"
+    },
+    "path_cleaner.bat": {
+        "category": "⚙️ System",
+        "description": "Remove duplicate and invalid entries from PATH variable"
+    },
+    "prevent_sleep.bat": {
+        "category": "⚙️ System",
+        "description": "Prevent computer from sleeping (indefinitely or timed)"
+    },
+    "windows_defender_toggle.bat": {
+        "category": "⚙️ System",
+        "description": "Enable or disable Windows Defender protection features"
+    },
+    "portable_antivirus.bat": {
+        "category": "🛡️ Security",
+        "description": "Portable Security Suite: Dr.Web and RKill (Anti-Malware)"
+    },
+    "privacy_suite.bat": {
+        "category": "🛡️ Security",
+        "description": "Portable Privacy Suite: O&O ShutUp10++ and WPD (Telemtry/Firewall)"
+    },
+    "uninstaller_suite.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Portable Uninstaller Suite: Geek Uninstaller and Revo (Clean Removal)"
+    },
+    "numlock_auto_on.bat": {
+        "category": "⚙️ System",
+        "description": "Force NumLock to be ON at Windows startup"
     }
 }
