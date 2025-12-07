@@ -251,8 +251,16 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 📧 Contact
 
-- **GitHub Issues** - For bug reports and feature requests
-- **Discussions** - For questions and community support
+- **GitHub:** [@mackka2k](https://github.com/mackka2k)
+- **Repository:** [script-launcher](https://github.com/mackka2k/script-launcher)
+- **Issues:** For bug reports and feature requests
+- **Discussions:** For questions and community support
+
+## 👤 Author
+
+**mackka2k**
+- GitHub: [@mackka2k](https://github.com/mackka2k)
+- Email: mackonis111@gmail.com
 
 ## 🗺️ Roadmap
 
