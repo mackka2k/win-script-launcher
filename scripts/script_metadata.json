@@ -27,10 +27,6 @@
         "category": "🛡️ Privacy",
         "description": "Remove Windows bloatware and disable unwanted features"
     },
-    "dns_changer.bat": {
-        "category": "🌐 Network",
-        "description": "Quick switch DNS (Google, Cloudflare, OpenDNS, Quad9, AdGuard)"
-    },
     "ip_information.bat": {
         "category": "🌐 Network",
         "description": "Display network info, IP addresses, gateway, DNS, and connections"
@@ -85,7 +81,7 @@
     },
     "mac_address_changer.bat": {
         "category": "🌐 Network",
-        "description": "Change or reset MAC address (random or custom)"
+        "description": "Spoof your network hardware ID (MAC Address) to improve privacy or bypass device bans"
     },
     "path_cleaner.bat": {
         "category": "⚙️ System",
@@ -114,5 +110,89 @@
     "numlock_auto_on.bat": {
         "category": "⚙️ System",
         "description": "Force NumLock to be ON at Windows startup"
+    },
+    "desktop_organizer.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Organize your desktop files into categorized folders automatically"
+    },
+    "set_dark_wallpaper.bat": {
+        "category": "🎨 Personalization",
+        "description": "Set a premium dark-themed minimalist wallpaper"
+    },
+    "pro_audio_optimizer.bat": {
+        "category": "🎧 Multimedia",
+        "description": "Optimize audio latency, set high priority for audio tasks, and configure pro microphone/headset settings"
+    },
+    "create_system_shortcuts.bat": {
+        "category": "⚙️ System",
+        "description": "Add essential Windows tool shortcuts to your Desktop Shortcuts folder"
+    },
+    "install_essentials.bat": {
+        "category": "📦 Software",
+        "description": "Automatically download and install Notepad++, Brave, Discord, Teams, qBittorrent, Steam, Telegram, VLC, WinRAR, and WinDirStat"
+    },
+    "install_dev_tools.bat": {
+        "category": "📦 Software",
+        "description": "Install developer essentials: VS Code, Git, Python, Node.js, Windows Terminal, and PowerToys"
+    },
+    "winget_auto_updater.bat": {
+        "category": "🔄 Maintenance",
+        "description": "Automatically check and update ALL installed programs on your PC to their latest versions"
+    },
+    "windows_bloat_remover.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Remove pre-installed Windows junk like Solitaire, News, Weather, and Feedback Hub"
+    },
+    "crash_investigator.bat": {
+        "category": "⚙️ System",
+        "description": "Analyze system logs and dump files to find the exact cause of BSODs and unexpected reboots"
+    },
+    "cortana_edge_killer.bat": {
+        "category": "🛡️ Privacy",
+        "description": "Kill and disable Cortana and Microsoft Edge background processes to free up resources"
+    },
+    "ultimate_privacy_shield.bat": {
+        "category": "🛡️ Privacy",
+        "description": "Lock down Windows privacy: disable telemetry, ad-ID, Bing search, and clear system audit logs"
+    },
+    "keylogger_detector.bat": {
+        "category": "🛡️ Security",
+        "description": "Scan for unidentified processes and unusual network connections that could indicate spyware"
+    },
+    "discord_stealth_cleaner.bat": {
+        "category": "🛡️ Security",
+        "description": "Wipe all Discord identifiers and cache to bypass device bans and improve privacy"
+    },
+    "create_restore_point.bat": {
+        "category": "⚙️ System",
+        "description": "Instantly create a Windows System Restore point to save your current system state"
+    },
+    "geo_bypass_dns.bat": {
+        "category": "🌐 Network",
+        "description": "Quickly switch between Cloudflare, Google, and Quad9 DNS for better privacy, speed, and bypassing geo-blocks"
+    },
+    "startup_manager.bat": {
+        "category": "⚙️ System",
+        "description": "Complete startup audit and interactive tool to remove unwanted programs from Windows boot"
+    },
+    "power_report.bat": {
+        "category": "⚡ Power",
+        "description": "Generate a detailed HTML report of your PC power consumption, efficiency, and battery health"
+    },
+    "nvidia_suite.bat": {
+        "category": "🎮 Gaming",
+        "description": "NVIDIA toolkit: Launch Control Panel, restart drivers, disable telemetry, and fix MPO flickering"
+    },
+    "internet_hog_finder.bat": {
+        "category": "🌐 Network",
+        "description": "Identify which programs are currently using your internet bandwidth in real-time"
+    },
+    "ultimate_performance.bat": {
+        "category": "⚡ Power",
+        "description": "Unlock and activate the hidden Windows Ultimate Performance power plan for maximum hardware power"
+    },
+    "port_killer.bat": {
+        "category": "🌐 Network",
+        "description": "Find and kill any process blocking a specific port (e.g., 3000, 8080) - great for coders"
     }
 }

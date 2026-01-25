@@ -1,115 +1,70 @@
 @echo off
+setlocal
+title Ultimate MAC Address Changer
+
 echo ============================================
-echo    MAC Address Changer
+echo      Ultimate MAC Address Changer
 echo ============================================
-echo.
-echo This script allows you to change or reset your MAC address.
-echo Administrator privileges are required.
 echo.
 
-:: Check for admin privileges
 net session >nul 2>&1
 if %errorLevel% neq 0 (
-    echo ERROR: This script requires administrator privileges.
-    echo Please run as administrator.
+    echo [!] KLAIDA: Reikalingos Administratoriaus teises.
     pause
     exit /b 1
 )
 
-:menu
-echo.
-echo Available Network Adapters:
-echo.
-powershell -Command "Get-NetAdapter | Where-Object {$_.Status -eq 'Up'} | Format-Table -Property Name, InterfaceDescription, MacAddress"
+:: Enhanced version with Full Network Refresh on Reset
+powershell -NoProfile -ExecutionPolicy Bypass -Command ^
+    "$regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}'; " ^
+    "$adapters = @(Get-NetAdapter | Where-Object { $_.Status -eq 'Up' }); " ^
+    "if ($adapters.Count -eq 0) { $adapters = @(Get-NetAdapter) }; " ^
+    "if ($adapters.Count -eq 0) { Write-Host 'Tinklo adapteriu nerasta.' -ForegroundColor Red; return }; " ^
+    "for ($i=0; $i -lt $adapters.Count; $i++) { $a = $adapters[$i]; Write-Host ('[' + ($i+1) + '] ' + $a.Name + ' (' + $a.MacAddress + ')') -ForegroundColor Cyan }; " ^
+    "Write-Host ''; Write-Host '[R] ATSTATYTI originalu MAC'; Write-Host '[Q] Iseiti'; " ^
+    "$choice = Read-Host 'Pasirinkimas'; if ($choice -eq 'Q') { return }; " ^
+    "if ($choice -eq 'R') { " ^
+    "  $idx = Read-Host 'Adapterio numeris'; $sel = $adapters[[int]$idx - 1]; " ^
+    "  Write-Host 'Vykdomas pilnas tinklo atstatymas...' -ForegroundColor Yellow; " ^
+    "  # 1. Release current IP ^
+       ipconfig /release $sel.Name 2>$null | Out-Null; " ^
+    "  # 2. Remove Registry Key ^
+       foreach ($key in (Get-ChildItem $regPath -ErrorAction SilentlyContinue)) { " ^
+    "    $v = Get-ItemProperty $key.PSPath -Name 'NetCfgInstanceId' -ErrorAction SilentlyContinue; " ^
+    "    if ($v -and $v.NetCfgInstanceId -eq $sel.DeviceId) { " ^
+    "      Remove-ItemProperty -Path $key.PSPath -Name 'NetworkAddress' -ErrorAction SilentlyContinue; " ^
+    "      Write-Host 'Registras isvalytas.' -ForegroundColor Gray; break " ^
+    "    } " ^
+    "  }; " ^
+    "  # 3. Restart Adapter ^
+       Disable-NetAdapter -Name $sel.Name -Confirm:$false; Enable-NetAdapter -Name $sel.Name -Confirm:$false; " ^
+    "  # 4. Renew IP ^
+       Write-Host 'Ieskoma r輿io su routeriu (Renew)...' -ForegroundColor Cyan; " ^
+       "Start-Sleep -s 3; " ^
+       "ipconfig /renew $sel.Name | Out-Null; " ^
+       "ipconfig /flushdns | Out-Null; " ^
+    "  Write-Host 'ORIGINALUS MAC ATSTATYTAS IR INTERNETAS GAIVINAMAS!' -ForegroundColor Green; return " ^
+    "}; " ^
+    "if ($choice -match '^\d+$' -and [int]$choice -le $adapters.Count) { " ^
+    "  $sel = $adapters[[int]$choice - 1]; $newMac = ''; for($j=0; $j -lt 6; $j++) { $newMac += '{0:X2}' -f (Get-Random -Min 0 -Max 255) }; " ^
+    "  $chars = '26AE'; $randChar = $chars[(Get-Random -Max 4)]; " ^
+    "  $newMac = $newMac.Substring(0,1) + $randChar + $newMac.Substring(2); " ^
+    "  Write-Host ('Gaminamas naujas tapatybes kodas: ' + $newMac) -ForegroundColor Yellow; " ^
+    "  $found = $false; foreach ($key in (Get-ChildItem $regPath -ErrorAction SilentlyContinue)) { " ^
+    "    $v = Get-ItemProperty $key.PSPath -Name 'NetCfgInstanceId' -ErrorAction SilentlyContinue; " ^
+    "    if ($v -and $v.NetCfgInstanceId -eq $sel.DeviceId) { " ^
+    "      Set-ItemProperty -Path $key.PSPath -Name 'NetworkAddress' -Value $newMac -Force; " ^
+    "      $found = $true; break " ^
+    "    } " ^
+    "  }; " ^
+    "  if ($found) { " ^
+    "    Write-Host 'Registras atnaujintas. Perkrauliamas adapteris...' -ForegroundColor Cyan; " ^
+    "    Disable-NetAdapter -Name $sel.Name -Confirm:$false; Enable-NetAdapter -Name $sel.Name -Confirm:$false; " ^
+    "    Write-Host 'SEKMINGAI PAKEISTA! Interneto rysys turetu gri恆i po 5-10 sek.' -ForegroundColor Green " ^
+    "  } else { Write-Host 'Klaida: Adapteris nerastas.' -ForegroundColor Red } " ^
+    "} else { Write-Host 'Atsaukta.' }"
+
 echo.
 echo ============================================
-echo    Options:
-echo ============================================
-echo.
-echo 1. Change MAC Address (Random)
-echo 2. Change MAC Address (Custom)
-echo 3. Reset to Original MAC Address
-echo 4. Exit
-echo.
-set /p choice="Enter your choice (1-4): "
-
-if "%choice%"=="1" goto random
-if "%choice%"=="2" goto custom
-if "%choice%"=="3" goto reset
-if "%choice%"=="4" goto end
-echo Invalid choice. Please try again.
-goto menu
-
-:random
-echo.
-set /p adapter="Enter adapter name (e.g., Ethernet, Wi-Fi): "
-
-:: Generate random MAC address
-powershell -Command "& { ^
-    $mac = '02' + ((1..5 | ForEach-Object { '{0:X2}' -f (Get-Random -Maximum 256) }) -join ''); ^
-    Write-Host 'Generated MAC Address: ' -NoNewline; ^
-    Write-Host $mac -ForegroundColor Green; ^
-    $mac = $mac -replace '..(?!$)', '$0-'; ^
-    try { ^
-        Set-NetAdapter -Name '%adapter%' -MacAddress $mac -Confirm:$false; ^
-        Write-Host 'MAC address changed successfully!' -ForegroundColor Green; ^
-        Write-Host 'Restarting adapter...'; ^
-        Restart-NetAdapter -Name '%adapter%' -Confirm:$false; ^
-        Write-Host 'Done!' -ForegroundColor Green; ^
-    } catch { ^
-        Write-Host 'ERROR: Failed to change MAC address.' -ForegroundColor Red; ^
-        Write-Host $_.Exception.Message; ^
-    } ^
-}"
-goto menu
-
-:custom
-echo.
-set /p adapter="Enter adapter name (e.g., Ethernet, Wi-Fi): "
-echo.
-echo Enter new MAC address (format: 02-XX-XX-XX-XX-XX)
-echo Note: First byte should be 02 for locally administered address
-set /p newmac="MAC Address: "
-
-powershell -Command "& { ^
-    try { ^
-        Set-NetAdapter -Name '%adapter%' -MacAddress '%newmac%' -Confirm:$false; ^
-        Write-Host 'MAC address changed successfully!' -ForegroundColor Green; ^
-        Write-Host 'Restarting adapter...'; ^
-        Restart-NetAdapter -Name '%adapter%' -Confirm:$false; ^
-        Write-Host 'Done!' -ForegroundColor Green; ^
-    } catch { ^
-        Write-Host 'ERROR: Failed to change MAC address.' -ForegroundColor Red; ^
-        Write-Host $_.Exception.Message; ^
-    } ^
-}"
-goto menu
-
-:reset
-echo.
-set /p adapter="Enter adapter name (e.g., Ethernet, Wi-Fi): "
-
-powershell -Command "& { ^
-    try { ^
-        $regPath = 'HKLM:\SYSTEM\CurrentControlSet\Control\Class\{4D36E972-E325-11CE-BFC1-08002BE10318}'; ^
-        Get-ChildItem $regPath | ForEach-Object { ^
-            $props = Get-ItemProperty $_.PSPath; ^
-            if ($props.DriverDesc -like '*%adapter%*') { ^
-                Remove-ItemProperty -Path $_.PSPath -Name 'NetworkAddress' -ErrorAction SilentlyContinue; ^
-            } ^
-        }; ^
-        Write-Host 'MAC address reset to original!' -ForegroundColor Green; ^
-        Write-Host 'Restarting adapter...'; ^
-        Restart-NetAdapter -Name '%adapter%' -Confirm:$false; ^
-        Write-Host 'Done!' -ForegroundColor Green; ^
-    } catch { ^
-        Write-Host 'ERROR: Failed to reset MAC address.' -ForegroundColor Red; ^
-        Write-Host $_.Exception.Message; ^
-    } ^
-}"
-goto menu
-
-:end
-echo.
-echo Exiting...
 pause
+exit /b
