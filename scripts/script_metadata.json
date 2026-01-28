@@ -43,10 +43,6 @@
         "category": "⚙️ System",
         "description": "Backup Windows registry and create system restore point"
     },
-    "ssd_optimizer.bat": {
-        "category": "⚙️ System",
-        "description": "Optimize SSD with TRIM, disable defrag, improve lifespan"
-    },
     "font_cache_rebuild.bat": {
         "category": "🔧 Quick Fixes",
         "description": "Fix font rendering issues by rebuilding font cache"
@@ -194,5 +190,89 @@
     "port_killer.bat": {
         "category": "🌐 Network",
         "description": "Find and kill any process blocking a specific port (e.g., 3000, 8080) - great for coders"
+    },
+    "network_latency_optimizer.bat": {
+        "category": "🌐 Network",
+        "description": "Optimize network settings for lower ping and better responsiveness in online games"
+    },
+    "disk_speed_test.bat": {
+        "category": "⚙️ System",
+        "description": "Measure real-world disk read and write speeds using Windows System Assessment Tool"
+    },
+    "windows_repair_knight.bat": {
+        "category": "⚙️ System",
+        "description": "Comprehensive system repair suite using DISM and SFC to fix corrupted Windows files"
+    },
+    "task_killer_extreme.bat": {
+        "category": "⚙️ System",
+        "description": "Forcefully terminate any stubborn process or application by name"
+    },
+    "ram_expert_info.bat": {
+        "category": "⚙️ System",
+        "description": "Get deep hardware details about your RAM: manufacturer, part number, speed (MHz), and capacity"
+    },
+    "time_syncer.bat": {
+        "category": "⚙️ System",
+        "description": "Forcefully synchronize your system clock with internet time servers to fix time drift"
+    },
+    "powercfg_settings_personal.bat": {
+        "category": "⚙️ System",
+        "description": "Apply personal system setup: Vilnius time zone, maximum power settings, and privacy tweaks"
+    },
+    "dns_benchmark.bat": {
+        "category": "🌐 Network",
+        "description": "Benchmark popular DNS servers to find the fastest one for your internet connection"
+    },
+    "event_log_wiper.bat": {
+        "category": "🧹 Cleaning",
+        "description": "Wipe all Windows event logs to free up space and improve privacy"
+    },
+    "hosts_file_manager.bat": {
+        "category": "⚙️ System",
+        "description": "Quickly edit the Windows hosts file to block websites or redirect IP addresses"
+    },
+    "gpu_info_extra.bat": {
+        "category": "⚙️ System",
+        "description": "Get detailed hardware info about your NVIDIA/AMD/Intel graphics card (VRAM, drivers, resolution)"
+    },
+    "windows_update_fixer.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Repair broken Windows Update services and clear update cache to fix errors"
+    },
+    "low_latency_audio_fix.bat": {
+        "category": "🎧 Multimedia",
+        "description": "Optimize Windows Audio sub-system for minimum latency and maximum priority (ideal for gaming & pro audio)"
+    },
+    "explorer_restart_pro.bat": {
+        "category": "🔧 Quick Fixes",
+        "description": "Restart Windows Explorer and rebuild icon/thumbnail cache to fix UI glitches and taskbar issues"
+    },
+    "ssd_lifetime_checker.bat": {
+        "category": "⚙️ System",
+        "description": "Monitor SSD health, wear percentage, and total bytes written (TBW) to prevent data loss"
+    },
+    "restore_point_manager.bat": {
+        "category": "⚙️ System",
+        "description": "Manage Windows System Restore points: list, create, and access system protection tools"
+    },
+    "windows_feature_manager.bat": {
+        "category": "⚙️ System",
+        "description": "Enable or disable optional Windows features like Hyper-V, WSL, and Sandbox using DISM"
+    },
+    "cmd_pro_setup.bat": {
+        "category": "⚙️ System",
+        "description": "Ultimate CMD terminal upgrade: UTF-8, QuickEdit, larger buffer, pro colors, Consolas font"
+    },
+    "driver_backup_tool.bat": {
+        "category": "⚙️ System",
+        "description": "Export all installed drivers to a backup folder - essential before Windows reinstall"
+    },
+    "fps_booster.bat": {
+        "category": "🎮 Gaming",
+        "description": "Maximize gaming FPS by disabling Game DVR, optimizing GPU settings, and reducing input lag"
+    },
+    "network_reset_pro.bat": {
+        "category": "🌐 Network",
+        "description": "Complete network reset: Winsock, TCP/IP, DNS, Firewall, adapters - fixes most connection issues"
     }
 }

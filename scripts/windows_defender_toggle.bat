@@ -22,7 +22,7 @@ echo Checking current status...
 echo.
 
 :: Check current status
-powershell -Command "& { $status = Get-MpPreference -ErrorAction SilentlyContinue; if ($status) { if ($status.DisableRealtimeMonitoring -eq $true) { Write-Host 'Current Status: ' -NoNewline; Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'Current Status: ' -NoNewline; Write-Host 'ENABLED' -ForegroundColor Green } } else { Write-Host 'Unable to determine status.' -ForegroundColor Yellow } }"
+powershell -NoProfile -Command "$status = Get-MpPreference -ErrorAction SilentlyContinue; if ($status) { if ($status.DisableRealtimeMonitoring) { Write-Host 'Current Status: ' -NoNewline; Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'Current Status: ' -NoNewline; Write-Host 'ENABLED' -ForegroundColor Green } } else { Write-Host 'Unable to determine status.' -ForegroundColor Yellow }"
 
 echo.
 echo ============================================
@@ -80,7 +80,7 @@ echo WARNING: This will disable all protection features!
 set /p confirm="Are you sure? (Y/N): "
 if /i not "%confirm%"=="Y" goto menu
 
-powershell -Command "& { Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -DisableBehaviorMonitoring $true; Set-MpPreference -DisableBlockAtFirstSeen $true; Set-MpPreference -DisableIOAVProtection $true; Set-MpPreference -DisableScriptScanning $true; Set-MpPreference -SubmitSamplesConsent 2; Set-MpPreference -MAPSReporting 0 }" 2>nul
+powershell -NoProfile -Command "Set-MpPreference -DisableRealtimeMonitoring $true; Set-MpPreference -DisableBehaviorMonitoring $true; Set-MpPreference -DisableBlockAtFirstSeen $true; Set-MpPreference -DisableIOAVProtection $true; Set-MpPreference -DisableScriptScanning $true; Set-MpPreference -SubmitSamplesConsent 2; Set-MpPreference -MAPSReporting 0" 2>nul
 
 if %errorLevel% equ 0 (
     echo.
@@ -95,7 +95,7 @@ goto menu
 :enableall
 echo.
 echo Enabling ALL Windows Defender protection...
-powershell -Command "& { Set-MpPreference -DisableRealtimeMonitoring $false; Set-MpPreference -DisableBehaviorMonitoring $false; Set-MpPreference -DisableBlockAtFirstSeen $false; Set-MpPreference -DisableIOAVProtection $false; Set-MpPreference -DisableScriptScanning $false; Set-MpPreference -SubmitSamplesConsent 1; Set-MpPreference -MAPSReporting 2 }" 2>nul
+powershell -NoProfile -Command "Set-MpPreference -DisableRealtimeMonitoring $false; Set-MpPreference -DisableBehaviorMonitoring $false; Set-MpPreference -DisableBlockAtFirstSeen $false; Set-MpPreference -DisableIOAVProtection $false; Set-MpPreference -DisableScriptScanning $false; Set-MpPreference -SubmitSamplesConsent 1; Set-MpPreference -MAPSReporting 2" 2>nul
 echo.
 echo All protection features ENABLED!
 goto menu
@@ -104,7 +104,7 @@ goto menu
 echo.
 echo Detailed Status:
 echo.
-powershell -Command "& { $pref = Get-MpPreference; Write-Host 'Real-time Protection: ' -NoNewline; if ($pref.DisableRealtimeMonitoring) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Behavior Monitoring: ' -NoNewline; if ($pref.DisableBehaviorMonitoring) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Cloud Protection: ' -NoNewline; if ($pref.MAPSReporting -eq 0) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Sample Submission: ' -NoNewline; if ($pref.SubmitSamplesConsent -eq 2) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green } }"
+powershell -NoProfile -Command "$pref = Get-MpPreference; Write-Host 'Real-time Protection: ' -NoNewline; if ($pref.DisableRealtimeMonitoring) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Behavior Monitoring: ' -NoNewline; if ($pref.DisableBehaviorMonitoring) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Cloud Protection: ' -NoNewline; if ($pref.MAPSReporting -eq 0) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }; Write-Host 'Sample Submission: ' -NoNewline; if ($pref.SubmitSamplesConsent -eq 2) { Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'ENABLED' -ForegroundColor Green }"
 goto menu
 
 :end
