@@ -274,5 +274,41 @@
     "network_reset_pro.bat": {
         "category": "🌐 Network",
         "description": "Complete network reset: Winsock, TCP/IP, DNS, Firewall, adapters - fixes most connection issues"
+    },
+    "network_adapter_tweaker.bat": {
+        "category": "🌐 Network",
+        "description": "Optimize network adapter settings for performance by disabling energy-saving features and reducing latency"
+    },
+    "nextdns_cli_pro_guard.bat": {
+        "category": "🧠 Discipline",
+        "description": "High-friction CLI guardian: Runs NextDNS as a hidden Windows Service for maximum discipline"
+    },
+    "iphone_nextdns_setup_guide.bat": {
+        "category": "🧠 Discipline",
+        "description": "Step-by-step instructions to fix and lock NextDNS on iPhone 15 Pro (Private Relay fix)"
+    },
+    "mouse_acceleration_killer.bat": {
+        "category": "🎮 Gaming",
+        "description": "Disable Windows mouse acceleration and apply 1:1 حركة (MarkC style fix)"
+    },
+    "ghost_driver_cleaner.bat": {
+        "category": "⚙️ System",
+        "description": "Scan and remove 'ghost' drivers (disconnected hardware) to speed up boot time"
+    },
+    "registry_compressor.bat": {
+        "category": "⚙️ System",
+        "description": "Optimize and compact the Windows Registry by cleaning logs and component store"
+    },
+    "latency_nitro_fix.bat": {
+        "category": "🎮 Gaming",
+        "description": "Lower system latency by disabling HPET and optimizing timer resolution for maximum response"
+    },
+    "internet_stability_monitor.bat": {
+        "category": "🌐 Network",
+        "description": "Real-time network diagnostics: monitors ping, jitter, and packet loss with visual indicators"
+    },
+    "firewall_basic_hardener.bat": {
+        "category": "🛡️ Security",
+        "description": "Enforce essential inbound firewall rules: blocks pings, SMB, and remote backdoors for basic safety"
     }
 }
