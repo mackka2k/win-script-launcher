@@ -139,3 +139,10 @@ logs/
 config.json
 scripts/*.exe
 scripts/*.lnk
+
+# Build artifacts
+*.zip
+*.tar.gz
+*.exe
+dist/
+build/
