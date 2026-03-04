@@ -3,10 +3,6 @@
         "category": "🧹 Cleaning",
         "description": "Deep clean browser history, cache, cookies, bookmarks, and extensions"
     },
-    "context_menu_cleaner.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Remove clutter from right-click context menu"
-    },
     "empty_folder_cleaner.bat": {
         "category": "🧹 Cleaning",
         "description": "Remove empty folders from user profile"
@@ -14,18 +10,6 @@
     "system_cleanup.bat": {
         "category": "🧹 Cleaning",
         "description": "Clean temp files, cache, and system junk"
-    },
-    "game_optimizer.bat": {
-        "category": "🎮 Gaming",
-        "description": "Optimize system for maximum gaming performance with NVIDIA tweaks"
-    },
-    "privacy_tweaker.bat": {
-        "category": "🛡️ Privacy",
-        "description": "Disable Windows telemetry, tracking, and data collection"
-    },
-    "windows_debloater.bat": {
-        "category": "🛡️ Privacy",
-        "description": "Remove Windows bloatware and disable unwanted features"
     },
     "ip_information.bat": {
         "category": "🌐 Network",
@@ -91,18 +75,6 @@
         "category": "⚙️ System",
         "description": "Enable or disable Windows Defender protection features"
     },
-    "portable_antivirus.bat": {
-        "category": "🛡️ Security",
-        "description": "Portable Security Suite: Dr.Web and RKill (Anti-Malware)"
-    },
-    "privacy_suite.bat": {
-        "category": "🛡️ Security",
-        "description": "Portable Privacy Suite: O&O ShutUp10++ and WPD (Telemtry/Firewall)"
-    },
-    "uninstaller_suite.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Portable Uninstaller Suite: Geek Uninstaller and Revo (Clean Removal)"
-    },
     "numlock_auto_on.bat": {
         "category": "⚙️ System",
         "description": "Force NumLock to be ON at Windows startup"
@@ -125,11 +97,7 @@
     },
     "install_essentials.bat": {
         "category": "📦 Software",
-        "description": "Automatically download and install Notepad++, Brave, Discord, Teams, qBittorrent, Steam, Telegram, VLC, WinRAR, and WinDirStat"
-    },
-    "install_dev_tools.bat": {
-        "category": "📦 Software",
-        "description": "Install developer essentials: VS Code, Git, Python, Node.js, Windows Terminal, and PowerToys"
+        "description": "Interactive installer for essential apps: 7-Zip, Brave, Discord, Telegram, VLC, Steam, Zed, Git, Python, Node.js, and more"
     },
     "winget_auto_updater.bat": {
         "category": "🔄 Maintenance",
@@ -261,7 +229,7 @@
     },
     "cmd_pro_setup.bat": {
         "category": "⚙️ System",
-        "description": "Ultimate CMD terminal upgrade: UTF-8, QuickEdit, larger buffer, pro colors, Consolas font"
+        "description": "CMD terminal upgrade: UTF-8 encoding, Git Bash colors (dark theme with green text)"
     },
     "driver_backup_tool.bat": {
         "category": "⚙️ System",
@@ -279,17 +247,9 @@
         "category": "🌐 Network",
         "description": "Optimize network adapter settings for performance by disabling energy-saving features and reducing latency"
     },
-    "nextdns_cli_pro_guard.bat": {
-        "category": "🧠 Discipline",
-        "description": "High-friction CLI guardian: Runs NextDNS as a hidden Windows Service for maximum discipline"
-    },
-    "iphone_nextdns_setup_guide.bat": {
-        "category": "🧠 Discipline",
-        "description": "Step-by-step instructions to fix and lock NextDNS on iPhone 15 Pro (Private Relay fix)"
-    },
     "mouse_acceleration_killer.bat": {
         "category": "🎮 Gaming",
-        "description": "Disable Windows mouse acceleration and apply 1:1 حركة (MarkC style fix)"
+        "description": "Disable Windows mouse acceleration and apply 1:1 movement (MarkC style fix)"
     },
     "ghost_driver_cleaner.bat": {
         "category": "⚙️ System",
