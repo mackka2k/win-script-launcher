@@ -87,10 +87,6 @@
         "category": "🎨 Personalization",
         "description": "Set a premium dark-themed minimalist wallpaper"
     },
-    "pro_audio_optimizer.bat": {
-        "category": "🎧 Multimedia",
-        "description": "Optimize audio latency, set high priority for audio tasks, and configure pro microphone/headset settings"
-    },
     "create_system_shortcuts.bat": {
         "category": "⚙️ System",
         "description": "Add essential Windows tool shortcuts to your Desktop Shortcuts folder"
@@ -207,9 +203,9 @@
         "category": "🔧 Quick Fixes",
         "description": "Repair broken Windows Update services and clear update cache to fix errors"
     },
-    "low_latency_audio_fix.bat": {
+    "ultimate_audio_optimizer.bat": {
         "category": "🎧 Multimedia",
-        "description": "Optimize Windows Audio sub-system for minimum latency and maximum priority (ideal for gaming & pro audio)"
+        "description": "The ultimate audio toolkit: Optimize latency, set Pro Audio priority, disable volume limits, and restart audio engine"
     },
     "explorer_restart_pro.bat": {
         "category": "🔧 Quick Fixes",
