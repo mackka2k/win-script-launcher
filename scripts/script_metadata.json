@@ -266,5 +266,9 @@
     "firewall_basic_hardener.bat": {
         "category": "🛡️ Security",
         "description": "Enforce essential inbound firewall rules: blocks pings, SMB, and remote backdoors for basic safety"
+    },
+    "mouse_jiggler.bat": {
+        "category": "⚙️ System",
+        "description": "Keep PC awake and Teams status Green by simulating a keystroke every few minutes"
     }
 }
