@@ -1,274 +1,310 @@
 {
-    "browser_cleaner.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Deep clean browser history, cache, cookies, bookmarks, and extensions"
-    },
-    "empty_folder_cleaner.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Remove empty folders from user profile"
-    },
-    "system_cleanup.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Clean temp files, cache, and system junk"
-    },
-    "ip_information.bat": {
-        "category": "🌐 Network",
-        "description": "Display network info, IP addresses, gateway, DNS, and connections"
-    },
-    "network_diagnostics.bat": {
-        "category": "🌐 Network",
-        "description": "Diagnose and fix network connectivity issues"
-    },
-    "open_to_bios.bat": {
-        "category": "⚙️ System",
-        "description": "Restart computer directly into BIOS/UEFI settings"
-    },
-    "registry_backup.bat": {
-        "category": "⚙️ System",
-        "description": "Backup Windows registry and create system restore point"
-    },
-    "font_cache_rebuild.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Fix font rendering issues by rebuilding font cache"
-    },
-    "icon_cache_rebuild.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Fix corrupted desktop icons by rebuilding icon cache"
-    },
-    "search_rebuild.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Fix Windows Search not working by rebuilding search index"
-    },
-    "store_reset.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Fix Microsoft Store download issues by resetting Store"
-    },
-    "temp_cleaner.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Clean all temporary files, prefetch, and thumbnail cache"
-    },
-    "empty_downloads.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Clean Downloads folder with options for all files or by age"
-    },
-    "network_reset.bat": {
-        "category": "🌐 Network",
-        "description": "Complete network reset: TCP/IP, DNS, Winsock, and firewall"
-    },
-    "speed_test.bat": {
-        "category": "🌐 Network",
-        "description": "Test internet download speed and latency"
-    },
-    "mac_address_changer.bat": {
-        "category": "🌐 Network",
-        "description": "Spoof your network hardware ID (MAC Address) to improve privacy or bypass device bans"
-    },
-    "path_cleaner.bat": {
-        "category": "⚙️ System",
-        "description": "Remove duplicate and invalid entries from PATH variable"
-    },
-    "prevent_sleep.bat": {
-        "category": "⚙️ System",
-        "description": "Prevent computer from sleeping (indefinitely or timed)"
-    },
-    "windows_defender_toggle.bat": {
-        "category": "⚙️ System",
-        "description": "Enable or disable Windows Defender protection features"
-    },
-    "numlock_auto_on.bat": {
-        "category": "⚙️ System",
-        "description": "Force NumLock to be ON at Windows startup"
-    },
-    "desktop_organizer.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Organize your desktop files into categorized folders automatically"
-    },
-    "set_dark_wallpaper.bat": {
-        "category": "🎨 Personalization",
-        "description": "Set a premium dark-themed minimalist wallpaper"
-    },
-    "create_system_shortcuts.bat": {
-        "category": "⚙️ System",
-        "description": "Add essential Windows tool shortcuts to your Desktop Shortcuts folder"
-    },
-    "install_essentials.bat": {
-        "category": "📦 Software",
-        "description": "Interactive installer for essential apps: 7-Zip, Brave, Discord, Telegram, VLC, Steam, Zed, Git, Python, Node.js, and more"
-    },
-    "winget_auto_updater.bat": {
-        "category": "🔄 Maintenance",
-        "description": "Automatically check and update ALL installed programs on your PC to their latest versions"
-    },
-    "windows_bloat_remover.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Remove pre-installed Windows junk like Solitaire, News, Weather, and Feedback Hub"
-    },
-    "crash_investigator.bat": {
-        "category": "⚙️ System",
-        "description": "Analyze system logs and dump files to find the exact cause of BSODs and unexpected reboots"
-    },
-    "cortana_edge_killer.bat": {
-        "category": "🛡️ Privacy",
-        "description": "Kill and disable Cortana and Microsoft Edge background processes to free up resources"
-    },
-    "ultimate_privacy_shield.bat": {
-        "category": "🛡️ Privacy",
-        "description": "Lock down Windows privacy: disable telemetry, ad-ID, Bing search, and clear system audit logs"
-    },
-    "keylogger_detector.bat": {
-        "category": "🛡️ Security",
-        "description": "Scan for unidentified processes and unusual network connections that could indicate spyware"
-    },
-    "discord_stealth_cleaner.bat": {
-        "category": "🛡️ Security",
-        "description": "Wipe all Discord identifiers and cache to bypass device bans and improve privacy"
-    },
-    "create_restore_point.bat": {
-        "category": "⚙️ System",
-        "description": "Instantly create a Windows System Restore point to save your current system state"
-    },
-    "geo_bypass_dns.bat": {
-        "category": "🌐 Network",
-        "description": "Quickly switch between Cloudflare, Google, and Quad9 DNS for better privacy, speed, and bypassing geo-blocks"
-    },
-    "startup_manager.bat": {
-        "category": "⚙️ System",
-        "description": "Complete startup audit and interactive tool to remove unwanted programs from Windows boot"
-    },
-    "power_report.bat": {
-        "category": "⚡ Power",
-        "description": "Generate a detailed HTML report of your PC power consumption, efficiency, and battery health"
-    },
-    "nvidia_suite.bat": {
-        "category": "🎮 Gaming",
-        "description": "NVIDIA toolkit: Launch Control Panel, restart drivers, disable telemetry, and fix MPO flickering"
-    },
-    "internet_hog_finder.bat": {
-        "category": "🌐 Network",
-        "description": "Identify which programs are currently using your internet bandwidth in real-time"
-    },
-    "ultimate_performance.bat": {
-        "category": "⚡ Power",
-        "description": "Unlock and activate the hidden Windows Ultimate Performance power plan for maximum hardware power"
-    },
-    "port_killer.bat": {
-        "category": "🌐 Network",
-        "description": "Find and kill any process blocking a specific port (e.g., 3000, 8080) - great for coders"
-    },
-    "network_latency_optimizer.bat": {
-        "category": "🌐 Network",
-        "description": "Optimize network settings for lower ping and better responsiveness in online games"
-    },
-    "disk_speed_test.bat": {
-        "category": "⚙️ System",
-        "description": "Measure real-world disk read and write speeds using Windows System Assessment Tool"
-    },
-    "windows_repair_knight.bat": {
-        "category": "⚙️ System",
-        "description": "Comprehensive system repair suite using DISM and SFC to fix corrupted Windows files"
-    },
-    "task_killer_extreme.bat": {
-        "category": "⚙️ System",
-        "description": "Forcefully terminate any stubborn process or application by name"
-    },
-    "ram_expert_info.bat": {
-        "category": "⚙️ System",
-        "description": "Get deep hardware details about your RAM: manufacturer, part number, speed (MHz), and capacity"
-    },
-    "time_syncer.bat": {
-        "category": "⚙️ System",
-        "description": "Forcefully synchronize your system clock with internet time servers to fix time drift"
-    },
-    "powercfg_settings_personal.bat": {
-        "category": "⚙️ System",
-        "description": "Apply personal system setup: Vilnius time zone, maximum power settings, and privacy tweaks"
-    },
-    "dns_benchmark.bat": {
-        "category": "🌐 Network",
-        "description": "Benchmark popular DNS servers to find the fastest one for your internet connection"
-    },
-    "event_log_wiper.bat": {
-        "category": "🧹 Cleaning",
-        "description": "Wipe all Windows event logs to free up space and improve privacy"
-    },
-    "hosts_file_manager.bat": {
-        "category": "⚙️ System",
-        "description": "Quickly edit the Windows hosts file to block websites or redirect IP addresses"
-    },
-    "gpu_info_extra.bat": {
-        "category": "⚙️ System",
-        "description": "Get detailed hardware info about your NVIDIA/AMD/Intel graphics card (VRAM, drivers, resolution)"
-    },
-    "windows_update_fixer.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Repair broken Windows Update services and clear update cache to fix errors"
-    },
-    "ultimate_audio_optimizer.bat": {
-        "category": "🎧 Multimedia",
-        "description": "The ultimate audio toolkit: Optimize latency, set Pro Audio priority, disable volume limits, and restart audio engine"
-    },
-    "explorer_restart_pro.bat": {
-        "category": "🔧 Quick Fixes",
-        "description": "Restart Windows Explorer and rebuild icon/thumbnail cache to fix UI glitches and taskbar issues"
-    },
-    "ssd_lifetime_checker.bat": {
-        "category": "⚙️ System",
-        "description": "Monitor SSD health, wear percentage, and total bytes written (TBW) to prevent data loss"
-    },
-    "restore_point_manager.bat": {
-        "category": "⚙️ System",
-        "description": "Manage Windows System Restore points: list, create, and access system protection tools"
-    },
-    "windows_feature_manager.bat": {
-        "category": "⚙️ System",
-        "description": "Enable or disable optional Windows features like Hyper-V, WSL, and Sandbox using DISM"
-    },
-    "cmd_pro_setup.bat": {
-        "category": "⚙️ System",
-        "description": "CMD terminal upgrade: UTF-8 encoding, Git Bash colors (dark theme with green text)"
-    },
-    "driver_backup_tool.bat": {
-        "category": "⚙️ System",
-        "description": "Export all installed drivers to a backup folder - essential before Windows reinstall"
-    },
-    "fps_booster.bat": {
-        "category": "🎮 Gaming",
-        "description": "Maximize gaming FPS by disabling Game DVR, optimizing GPU settings, and reducing input lag"
-    },
-    "network_reset_pro.bat": {
-        "category": "🌐 Network",
-        "description": "Complete network reset: Winsock, TCP/IP, DNS, Firewall, adapters - fixes most connection issues"
-    },
-    "network_adapter_tweaker.bat": {
-        "category": "🌐 Network",
-        "description": "Optimize network adapter settings for performance by disabling energy-saving features and reducing latency"
-    },
-    "mouse_acceleration_killer.bat": {
-        "category": "🎮 Gaming",
-        "description": "Disable Windows mouse acceleration and apply 1:1 movement (MarkC style fix)"
-    },
-    "ghost_driver_cleaner.bat": {
-        "category": "⚙️ System",
-        "description": "Scan and remove 'ghost' drivers (disconnected hardware) to speed up boot time"
-    },
-    "registry_compressor.bat": {
-        "category": "⚙️ System",
-        "description": "Optimize and compact the Windows Registry by cleaning logs and component store"
-    },
-    "latency_nitro_fix.bat": {
-        "category": "🎮 Gaming",
-        "description": "Lower system latency by disabling HPET and optimizing timer resolution for maximum response"
-    },
-    "internet_stability_monitor.bat": {
-        "category": "🌐 Network",
-        "description": "Real-time network diagnostics: monitors ping, jitter, and packet loss with visual indicators"
-    },
-    "firewall_basic_hardener.bat": {
-        "category": "🛡️ Security",
-        "description": "Enforce essential inbound firewall rules: blocks pings, SMB, and remote backdoors for basic safety"
-    },
-    "mouse_jiggler.bat": {
-        "category": "⚙️ System",
-        "description": "Keep PC awake and Teams status Green by simulating a keystroke every few minutes"
-    }
+  "browser_cleaner.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Deep clean browser history, cache, cookies, bookmarks, and extensions"
+  },
+  "empty_folder_cleaner.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Remove empty folders from user profile"
+  },
+  "system_cleanup.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Clean temp files, cache, and system junk"
+  },
+  "ip_information.bat": {
+    "category": "🌐 Network",
+    "description": "Display network info, IP addresses, gateway, DNS, and connections"
+  },
+  "network_diagnostics.bat": {
+    "category": "🌐 Network",
+    "description": "Diagnose and fix network connectivity issues"
+  },
+  "open_to_bios.bat": {
+    "category": "⚙️ System",
+    "description": "Restart computer directly into BIOS/UEFI settings"
+  },
+  "registry_backup.bat": {
+    "category": "⚙️ System",
+    "description": "Backup Windows registry and create system restore point"
+  },
+  "font_cache_rebuild.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Fix font rendering issues by rebuilding font cache"
+  },
+  "icon_cache_rebuild.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Fix corrupted desktop icons by rebuilding icon cache"
+  },
+  "search_rebuild.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Fix Windows Search not working by rebuilding search index"
+  },
+  "store_reset.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Fix Microsoft Store download issues by resetting Store"
+  },
+  "temp_cleaner.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Clean all temporary files, prefetch, and thumbnail cache"
+  },
+  "empty_downloads.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Clean Downloads folder with options for all files or by age"
+  },
+  "network_reset.bat": {
+    "category": "🌐 Network",
+    "description": "Complete network reset: TCP/IP, DNS, Winsock, and firewall"
+  },
+  "speed_test.bat": {
+    "category": "🌐 Network",
+    "description": "Test internet download speed and latency"
+  },
+  "mac_address_changer.bat": {
+    "category": "🌐 Network",
+    "description": "Spoof your network hardware ID (MAC Address) to improve privacy or bypass device bans"
+  },
+  "path_cleaner.bat": {
+    "category": "⚙️ System",
+    "description": "Remove duplicate and invalid entries from PATH variable"
+  },
+  "prevent_sleep.bat": {
+    "category": "⚙️ System",
+    "description": "Prevent computer from sleeping (indefinitely or timed)"
+  },
+  "windows_defender_toggle.bat": {
+    "category": "⚙️ System",
+    "description": "Enable or disable Windows Defender protection features"
+  },
+  "numlock_auto_on.bat": {
+    "category": "⚙️ System",
+    "description": "Force NumLock to be ON at Windows startup"
+  },
+  "desktop_organizer.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Organize your desktop files into categorized folders automatically"
+  },
+  "set_dark_wallpaper.bat": {
+    "category": "🎨 Personalization",
+    "description": "Set a premium dark-themed minimalist wallpaper"
+  },
+  "create_system_shortcuts.bat": {
+    "category": "⚙️ System",
+    "description": "Add essential Windows tool shortcuts to your Desktop Shortcuts folder"
+  },
+  "install_essentials.bat": {
+    "category": "📦 Software",
+    "description": "Interactive installer for essential apps: 7-Zip, Brave, Discord, Telegram, VLC, Steam, Zed, Git, Python, Node.js, and more"
+  },
+  "winget_auto_updater.bat": {
+    "category": "🔄 Maintenance",
+    "description": "Automatically check and update ALL installed programs on your PC to their latest versions"
+  },
+  "windows_bloat_remover.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Remove pre-installed Windows junk like Solitaire, News, Weather, and Feedback Hub"
+  },
+  "crash_investigator.bat": {
+    "category": "⚙️ System",
+    "description": "Analyze system logs and dump files to find the exact cause of BSODs and unexpected reboots"
+  },
+  "cortana_edge_killer.bat": {
+    "category": "🛡️ Privacy",
+    "description": "Kill and disable Cortana and Microsoft Edge background processes to free up resources"
+  },
+  "ultimate_privacy_shield.bat": {
+    "category": "🛡️ Privacy",
+    "description": "Lock down Windows privacy: disable telemetry, ad-ID, Bing search, and clear system audit logs"
+  },
+  "keylogger_detector.bat": {
+    "category": "🛡️ Security",
+    "description": "Scan for unidentified processes and unusual network connections that could indicate spyware"
+  },
+  "discord_stealth_cleaner.bat": {
+    "category": "🛡️ Security",
+    "description": "Wipe all Discord identifiers and cache to bypass device bans and improve privacy"
+  },
+  "create_restore_point.bat": {
+    "category": "⚙️ System",
+    "description": "Instantly create a Windows System Restore point to save your current system state"
+  },
+  "geo_bypass_dns.bat": {
+    "category": "🌐 Network",
+    "description": "Quickly switch between Cloudflare, Google, and Quad9 DNS for better privacy, speed, and bypassing geo-blocks"
+  },
+  "startup_manager.bat": {
+    "category": "⚙️ System",
+    "description": "Complete startup audit and interactive tool to remove unwanted programs from Windows boot"
+  },
+  "power_report.bat": {
+    "category": "⚡ Power",
+    "description": "Generate a detailed HTML report of your PC power consumption, efficiency, and battery health"
+  },
+  "nvidia_suite.bat": {
+    "category": "🎮 Gaming",
+    "description": "NVIDIA toolkit: Launch Control Panel, restart drivers, disable telemetry, and fix MPO flickering"
+  },
+  "internet_hog_finder.bat": {
+    "category": "🌐 Network",
+    "description": "Identify which programs are currently using your internet bandwidth in real-time"
+  },
+  "ultimate_performance.bat": {
+    "category": "⚡ Power",
+    "description": "Unlock and activate the hidden Windows Ultimate Performance power plan for maximum hardware power"
+  },
+  "port_killer.bat": {
+    "category": "🌐 Network",
+    "description": "Find and kill any process blocking a specific port (e.g., 3000, 8080) - great for coders"
+  },
+  "network_latency_optimizer.bat": {
+    "category": "🌐 Network",
+    "description": "Optimize network settings for lower ping and better responsiveness in online games"
+  },
+  "disk_speed_test.bat": {
+    "category": "⚙️ System",
+    "description": "Measure real-world disk read and write speeds using Windows System Assessment Tool"
+  },
+  "windows_repair_knight.bat": {
+    "category": "⚙️ System",
+    "description": "Comprehensive system repair suite using DISM and SFC to fix corrupted Windows files"
+  },
+  "task_killer_extreme.bat": {
+    "category": "⚙️ System",
+    "description": "Forcefully terminate any stubborn process or application by name"
+  },
+  "ram_expert_info.bat": {
+    "category": "⚙️ System",
+    "description": "Get deep hardware details about your RAM: manufacturer, part number, speed (MHz), and capacity"
+  },
+  "time_syncer.bat": {
+    "category": "⚙️ System",
+    "description": "Forcefully synchronize your system clock with internet time servers to fix time drift"
+  },
+  "powercfg_settings_personal.bat": {
+    "category": "⚙️ System",
+    "description": "Apply personal system setup: Vilnius time zone, maximum power settings, and privacy tweaks"
+  },
+  "dns_benchmark.bat": {
+    "category": "🌐 Network",
+    "description": "Benchmark popular DNS servers to find the fastest one for your internet connection"
+  },
+  "event_log_wiper.bat": {
+    "category": "🧹 Cleaning",
+    "description": "Wipe all Windows event logs to free up space and improve privacy"
+  },
+  "hosts_file_manager.bat": {
+    "category": "⚙️ System",
+    "description": "Quickly edit the Windows hosts file to block websites or redirect IP addresses"
+  },
+  "gpu_info_extra.bat": {
+    "category": "⚙️ System",
+    "description": "Get detailed hardware info about your NVIDIA/AMD/Intel graphics card (VRAM, drivers, resolution)"
+  },
+  "windows_update_fixer.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Repair broken Windows Update services and clear update cache to fix errors"
+  },
+  "ultimate_audio_optimizer.bat": {
+    "description": "Optimize Windows audio: set Pro Audio priority, fix latency via MMCSS, disable Absolute Volume, restart audio services",
+    "category": "🎧 Multimedia"
+  },
+  "explorer_restart_pro.bat": {
+    "category": "🔧 Quick Fixes",
+    "description": "Restart Windows Explorer and rebuild icon/thumbnail cache to fix UI glitches and taskbar issues"
+  },
+  "ssd_lifetime_checker.bat": {
+    "category": "⚙️ System",
+    "description": "Monitor SSD health, wear percentage, and total bytes written (TBW) to prevent data loss"
+  },
+  "restore_point_manager.bat": {
+    "category": "⚙️ System",
+    "description": "Manage Windows System Restore points: list, create, and access system protection tools"
+  },
+  "windows_feature_manager.bat": {
+    "category": "⚙️ System",
+    "description": "Enable or disable optional Windows features like Hyper-V, WSL, and Sandbox using DISM"
+  },
+  "cmd_pro_setup.bat": {
+    "category": "⚙️ System",
+    "description": "CMD terminal upgrade: UTF-8 encoding, Git Bash colors (dark theme with green text)"
+  },
+  "driver_backup_tool.bat": {
+    "category": "⚙️ System",
+    "description": "Export all installed drivers to a backup folder - essential before Windows reinstall"
+  },
+  "fps_booster.bat": {
+    "category": "🎮 Gaming",
+    "description": "Maximize gaming FPS by disabling Game DVR, optimizing GPU settings, and reducing input lag"
+  },
+  "network_reset_pro.bat": {
+    "category": "🌐 Network",
+    "description": "Complete network reset: Winsock, TCP/IP, DNS, Firewall, adapters - fixes most connection issues"
+  },
+  "network_adapter_tweaker.bat": {
+    "category": "🌐 Network",
+    "description": "Optimize network adapter settings for performance by disabling energy-saving features and reducing latency"
+  },
+  "mouse_acceleration_killer.bat": {
+    "category": "🎮 Gaming",
+    "description": "Disable Windows mouse acceleration and apply 1:1 movement (MarkC style fix)"
+  },
+  "ghost_driver_cleaner.bat": {
+    "category": "⚙️ System",
+    "description": "Scan and remove 'ghost' drivers (disconnected hardware) to speed up boot time"
+  },
+  "registry_compressor.bat": {
+    "category": "⚙️ System",
+    "description": "Optimize and compact the Windows Registry by cleaning logs and component store"
+  },
+  "latency_nitro_fix.bat": {
+    "category": "🎮 Gaming",
+    "description": "Lower system latency by disabling HPET and optimizing timer resolution for maximum response"
+  },
+  "internet_stability_monitor.bat": {
+    "category": "🌐 Network",
+    "description": "Real-time network diagnostics: monitors ping, jitter, and packet loss with visual indicators"
+  },
+  "firewall_basic_hardener.bat": {
+    "category": "🛡️ Security",
+    "description": "Enforce essential inbound firewall rules: blocks pings, SMB, and remote backdoors for basic safety"
+  },
+  "mouse_jiggler.bat": {
+    "description": "Keep Microsoft Teams status as Available by jiggling the mouse every second until stopped",
+    "category": "🔧 Quick Fixes"
+  },
+  "battery_health_report.bat": {
+    "description": "Check battery charge level, health percentage, wear, and generate a detailed HTML battery report",
+    "category": "⚡ Power"
+  },
+  "restart_explorer_no_admin.bat": {
+    "description": "Quickly restart Windows Explorer without admin rights to fix taskbar and UI glitches",
+    "category": "🔧 Quick Fixes"
+  },
+  "bluescreen_analyzer.bat": {
+    "description": "Analyze BSOD history from Event Log, inspect minidump files, and view crash statistics",
+    "category": "⚙️ System"
+  },
+  "pos_diagnostic.bat": {
+    "description": "Collect POS (cashier) terminal diagnostics: touch keyboard, edge swipe, tablet mode, and browser settings",
+    "category": "⚙️ System"
+  },
+  "scheduled_task_auditor.bat": {
+    "description": "Audit all Windows scheduled tasks: list active/disabled, scan for suspicious entries, and export to CSV",
+    "category": "🛡️ Security"
+  },
+  "thermal_throttle_monitor.bat": {
+    "description": "Monitor CPU/GPU temperatures and detect thermal throttling in real-time with thermal profile reports",
+    "category": "⚙️ System"
+  },
+  "memory_clean.bat": {
+    "description": "Quick clean of temp files, Windows prefetch, thumbnail cache, and Origin logs",
+    "category": "🧹 Cleaning"
+  },
+  "windows_log_analyzer.bat": {
+    "description": "Analyze Windows Event Viewer logs: show errors from last 24h/week, critical summary, top repeating errors, and CSV export",
+    "category": "⚙️ System"
+  },
+  "memory_leak_detector.bat": {
+    "description": "Monitor RAM usage in real-time, show top memory-hogging processes, and detect memory leaks by tracking growth",
+    "category": "⚙️ System"
+  }
 }
