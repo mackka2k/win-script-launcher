@@ -306,5 +306,9 @@
   "memory_leak_detector.bat": {
     "description": "Monitor RAM usage in real-time, show top memory-hogging processes, and detect memory leaks by tracking growth",
     "category": "⚙️ System"
+  },
+  "wifi_fix.bat": {
+    "description": "Diagnose and fix WiFi issues: check hardware, drivers, WLAN service, enable disabled adapters, and repair wireless on custom Windows",
+    "category": "🌐 Network"
   }
 }
