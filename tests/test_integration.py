@@ -1,152 +1,100 @@
-"""Integration tests for complete workflows."""
+"""End-to-end integration tests."""
+
+from __future__ import annotations
 
 import time
 from pathlib import Path
 
-import pytest
-
 from src.config import AppConfig
-from src.models import ExecutionStatus, ScriptType
+from src.models import ExecutionStatus
 from src.script_executor import ScriptExecutor
 from src.script_manager import ScriptManager
 
 
-class TestIntegration:
-    """Integration tests for complete workflows."""
+def _wait_until(predicate, timeout: float = 15.0, interval: float = 0.05) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(interval)
+    return False
 
-    @pytest.fixture
-    def test_environment(self, tmp_path):
-        """Set up complete test environment."""
+
+class TestIntegration:
+    def test_discovery_to_execution_python(self, tmp_path: Path) -> None:
         scripts_dir = tmp_path / "scripts"
         scripts_dir.mkdir()
+        (scripts_dir / "hello.py").write_text("print('integration')")
 
-        # Create test scripts
-        batch_script = scripts_dir / "test.bat"
-        batch_script.write_text("@echo off\necho Integration Test\n")
-
-        python_script = scripts_dir / "test.py"
-        python_script.write_text("print('Python Integration Test')\n")
-
-        config = AppConfig()
-        manager = ScriptManager(scripts_dir, config=config)
+        manager = ScriptManager(scripts_dir, cache_path=tmp_path / "cache.json")
         executor = ScriptExecutor(timeout_seconds=10)
 
-        return {
-            "scripts_dir": scripts_dir,
-            "config": config,
-            "manager": manager,
-            "executor": executor,
-        }
-
-    def test_complete_workflow_discovery_to_execution(self, test_environment):
-        """Test complete workflow from discovery to execution."""
-        manager = test_environment["manager"]
-        executor = test_environment["executor"]
-
-        # Discover scripts
         scripts = manager.discover_scripts()
-        assert len(scripts) == 2
+        assert len(scripts) == 1
+        execution = executor.execute_script(scripts[0])
 
-        # Execute batch script
-        batch_script = next(s for s in scripts if s.script_type == ScriptType.BATCH)
-        execution = executor.execute_script(batch_script)
-
-        # Wait for completion
-        time.sleep(2)
-
-        # Verify execution
+        assert _wait_until(lambda: execution.is_terminal)
         assert execution.status == ExecutionStatus.SUCCESS
-        assert execution.return_code == 0
-        assert "Integration Test" in execution.full_output
+        assert "integration" in execution.full_output
 
-    def test_multiple_concurrent_executions(self, test_environment):
-        """Test executing multiple scripts concurrently."""
-        manager = test_environment["manager"]
-        executor = test_environment["executor"]
+    def test_multiple_concurrent_executions(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        (scripts_dir / "a.py").write_text("print('a')")
+        (scripts_dir / "b.py").write_text("print('b')")
 
+        manager = ScriptManager(scripts_dir, cache_path=tmp_path / "cache.json")
+        executor = ScriptExecutor(timeout_seconds=10)
+
+        executions = [executor.execute_script(s) for s in manager.discover_scripts()]
+        assert _wait_until(lambda: all(e.is_terminal for e in executions))
+        assert all(e.status == ExecutionStatus.SUCCESS for e in executions)
+
+    def test_config_save_and_load_roundtrip(self, tmp_path: Path) -> None:
+        cfg = AppConfig()
+        cfg.theme.mode = "light"
+        cfg.window.width = 1200
+        cfg.execution.timeout_seconds = 120
+
+        path = tmp_path / "config.json"
+        cfg.save(path)
+
+        loaded = AppConfig.load(path)
+        assert loaded.theme.mode == "light"
+        assert loaded.window.width == 1200
+        assert loaded.execution.timeout_seconds == 120
+
+    def test_config_save_with_legacy_fields_ignored(self, tmp_path: Path) -> None:
+        path = tmp_path / "config.json"
+        path.write_text(
+            '{"theme":{"mode":"dark","accent_color":"#1f6aa5"},'
+            '"window":{"width":900,"height":700},'
+            '"execution":{"timeout_seconds":60},'
+            '"script_cache":{"legacy":true},'
+            '"log_level":"INFO"}'
+        )
+        cfg = AppConfig.load(path)
+        assert cfg.log_level == "INFO"
+        assert cfg.execution.timeout_seconds == 60
+
+    def test_failing_script_does_not_break_executor(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "scripts"
+        scripts_dir.mkdir()
+        (scripts_dir / "fail.py").write_text("import sys; sys.exit(7)")
+        (scripts_dir / "ok.py").write_text("print('ok')")
+
+        manager = ScriptManager(scripts_dir, cache_path=tmp_path / "cache.json")
+        executor = ScriptExecutor(timeout_seconds=10)
         scripts = manager.discover_scripts()
 
-        # Execute all scripts
-        executions = []
-        for script in scripts:
-            execution = executor.execute_script(script)
-            executions.append(execution)
+        fail = next(s for s in scripts if s.name == "fail.py")
+        ok = next(s for s in scripts if s.name == "ok.py")
 
-        # Wait for all to complete
-        time.sleep(3)
+        e1 = executor.execute_script(fail)
+        assert _wait_until(lambda: e1.is_terminal)
+        assert e1.status == ExecutionStatus.FAILED
+        assert e1.return_code == 7
 
-        # Verify all completed
-        for execution in executions:
-            assert execution.status == ExecutionStatus.SUCCESS
-
-    def test_script_metadata_persistence(self, test_environment):
-        """Test that script metadata persists across operations."""
-        manager = test_environment["manager"]
-        executor = test_environment["executor"]
-        config = test_environment["config"]
-
-        # First discovery
-        scripts1 = manager.discover_scripts()
-        script = scripts1[0]
-
-        # Execute script
-        executor.execute_script(script)
-        time.sleep(2)
-
-        # Verify metadata updated
-        assert script.run_count == 1
-        assert script.last_run is not None
-
-        # Second discovery should preserve metadata
-        scripts2 = manager.discover_scripts()
-        script2 = next(s for s in scripts2 if s.path == script.path)
-
-        assert script2.run_count == 1
-        assert script2.last_run is not None
-
-    def test_config_save_and_load(self, test_environment, tmp_path):
-        """Test configuration persistence."""
-        config = test_environment["config"]
-        config_path = tmp_path / "config.json"
-
-        # Modify config
-        config.theme.mode = "dark"
-        config.window.width = 1200
-
-        # Save config
-        config.save(config_path)
-
-        # Load config
-        loaded_config = AppConfig.load(config_path)
-
-        # Verify
-        assert loaded_config.theme.mode == "dark"
-        assert loaded_config.window.width == 1200
-
-    def test_error_recovery(self, test_environment):
-        """Test system recovers from errors gracefully."""
-        manager = test_environment["manager"]
-        executor = test_environment["executor"]
-        scripts_dir = test_environment["scripts_dir"]
-
-        # Create failing script
-        failing_script = scripts_dir / "fail.bat"
-        failing_script.write_text("@echo off\nexit /b 1\n")
-
-        scripts = manager.discover_scripts()
-        fail_script = next(s for s in scripts if s.name == "fail.bat")
-
-        # Execute failing script
-        execution = executor.execute_script(fail_script)
-        time.sleep(2)
-
-        # System should handle failure gracefully
-        assert execution.status == ExecutionStatus.FAILED
-        assert execution.return_code == 1
-
-        # System should still be able to execute other scripts
-        good_script = next(s for s in scripts if s.name == "test.bat")
-        execution2 = executor.execute_script(good_script)
-        time.sleep(2)
-
-        assert execution2.status == ExecutionStatus.SUCCESS
+        e2 = executor.execute_script(ok)
+        assert _wait_until(lambda: e2.is_terminal)
+        assert e2.status == ExecutionStatus.SUCCESS

@@ -1,6 +1,5 @@
-# Core dependencies
+# Runtime dependencies
 loguru>=0.7.0
-pydantic>=2.0.0
 watchdog>=3.0.0
 customtkinter>=5.2.0
 packaging>=23.0
@@ -8,9 +7,10 @@ packaging>=23.0
 # Build
 pyinstaller>=6.3.0
 
-# Development (optional)
+# Development
 pytest>=7.0.0
 pytest-cov>=4.0.0
-black>=23.0.0
+pytest-timeout>=2.2.0
 ruff>=0.1.0
 mypy>=1.0.0
+black>=23.0.0

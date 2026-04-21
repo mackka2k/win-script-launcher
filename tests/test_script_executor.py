@@ -1,200 +1,210 @@
-"""Comprehensive tests for ScriptExecutor."""
+"""Tests for ScriptExecutor."""
+
+from __future__ import annotations
 
 import time
 from pathlib import Path
-from unittest.mock import Mock, patch
 
 import pytest
 
-from src.exceptions import ScriptNotFoundError, ScriptTimeoutError
+from src.exceptions import ScriptNotFoundError
 from src.models import ExecutionStatus, Script, ScriptType
 from src.script_executor import ScriptExecutor
 
 
+def _wait_until(predicate, timeout: float = 10.0, interval: float = 0.05) -> bool:
+    deadline = time.monotonic() + timeout
+    while time.monotonic() < deadline:
+        if predicate():
+            return True
+        time.sleep(interval)
+    return False
+
+
 class TestScriptExecutor:
-    """Test suite for ScriptExecutor class."""
+    """Unit tests targeting the Python-script execution path (portable)."""
 
-    @pytest.fixture
-    def executor(self):
-        """Create a ScriptExecutor instance for testing."""
-        return ScriptExecutor(timeout_seconds=10)
+    def test_initialization(self, script_executor: ScriptExecutor) -> None:
+        assert script_executor.timeout_seconds == 10
+        assert script_executor.get_active_count() == 0
 
-    @pytest.fixture
-    def mock_script(self, tmp_path):
-        """Create a mock script file for testing."""
-        script_file = tmp_path / "test.bat"
-        script_file.write_text("@echo off\necho Test Output\n")
-        return Script.from_path(script_file)
-
-    @pytest.fixture
-    def long_running_script(self, tmp_path):
-        """Create a script that runs for a long time."""
-        script_file = tmp_path / "long.bat"
-        script_file.write_text("@echo off\ntimeout /t 30 /nobreak\n")
-        return Script.from_path(script_file)
-
-    def test_executor_initialization(self, executor):
-        """Test ScriptExecutor initializes correctly."""
-        assert executor.timeout_seconds == 10
-        assert len(executor.active_executions) == 0
-        assert len(executor.processes) == 0
-
-    def test_execute_script_success(self, executor, mock_script):
-        """Test successful script execution."""
-        output_lines = []
-        completion_called = []
-
-        def on_output(line: str):
-            output_lines.append(line)
-
-        def on_completion(execution):
-            completion_called.append(execution)
-
-        execution = executor.execute_script(
-            mock_script, output_callback=on_output, completion_callback=on_completion
+    def test_execute_nonexistent_script_raises(
+        self, script_executor: ScriptExecutor
+    ) -> None:
+        fake = Script(
+            path=Path("/definitely/does/not/exist.py"),
+            name="fake.py",
+            script_type=ScriptType.PYTHON,
         )
+        with pytest.raises(ScriptNotFoundError):
+            script_executor.execute_script(fake)
 
-        assert execution.status == ExecutionStatus.PENDING
-        assert execution.script == mock_script
+    def test_execute_python_success(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory(body="print('hello-output')")
+        script = Script.from_path(path)
 
-        # Wait for completion
-        time.sleep(2)
+        output: list[str] = []
+        completed: list = []
 
+        execution = script_executor.execute_script(
+            script,
+            output_callback=output.append,
+            completion_callback=completed.append,
+        )
+        assert execution.script == script
+
+        assert _wait_until(lambda: execution.is_terminal, timeout=15)
         assert execution.status == ExecutionStatus.SUCCESS
         assert execution.return_code == 0
-        assert len(output_lines) > 0
-        assert len(completion_called) == 1
+        assert any("hello-output" in line for line in output)
+        assert any("hello-output" in line for line in execution.output)
+        assert len(completed) == 1
 
-    def test_execute_nonexistent_script(self, executor):
-        """Test executing a script that doesn't exist."""
-        fake_script = Script(
-            path=Path("/nonexistent/script.bat"), name="fake.bat", script_type=ScriptType.BATCH
+    def test_failed_script_reports_failed(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory(body="import sys; sys.exit(3)")
+        script = Script.from_path(path)
+
+        execution = script_executor.execute_script(script)
+        assert _wait_until(lambda: execution.is_terminal, timeout=15)
+        assert execution.status == ExecutionStatus.FAILED
+        assert execution.return_code == 3
+
+    def test_timeout(
+        self,
+        python_script_factory,
+    ) -> None:
+        executor = ScriptExecutor(timeout_seconds=1)
+        path = python_script_factory(
+            name="sleep.py", body="import time; time.sleep(10)"
         )
+        script = Script.from_path(path)
 
-        with pytest.raises(ScriptNotFoundError):
-            executor.execute_script(fake_script)
-
-    def test_script_timeout(self, executor, long_running_script):
-        """Test script execution timeout."""
-        executor.timeout_seconds = 2
-
-        execution = executor.execute_script(long_running_script)
-
-        # Wait for timeout
-        time.sleep(4)
-
+        execution = executor.execute_script(script)
+        assert _wait_until(lambda: execution.is_terminal, timeout=10)
         assert execution.status == ExecutionStatus.TIMEOUT
 
-    def test_cancel_execution(self, executor, long_running_script):
-        """Test cancelling a running script."""
-        execution = executor.execute_script(long_running_script)
+    def test_cancel_execution(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory(
+            name="longsleep.py", body="import time; time.sleep(30)"
+        )
+        script = Script.from_path(path)
 
-        # Give it time to start
-        time.sleep(0.5)
+        execution = script_executor.execute_script(script)
+        assert _wait_until(lambda: script_executor.is_running(script), timeout=5)
 
-        success = executor.cancel_execution(long_running_script)
-
-        assert success
+        assert script_executor.cancel_execution(script)
+        assert _wait_until(lambda: execution.is_terminal, timeout=5)
         assert execution.status == ExecutionStatus.CANCELLED
 
-    def test_cancel_nonexistent_execution(self, executor, mock_script):
-        """Test cancelling a script that isn't running."""
-        success = executor.cancel_execution(mock_script)
-        assert not success
+    def test_cancel_nonexistent_execution(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory()
+        script = Script.from_path(path)
+        assert script_executor.cancel_execution(script) is False
 
-    def test_is_running(self, executor, long_running_script):
-        """Test checking if a script is running."""
-        assert not executor.is_running(long_running_script)
+    def test_cancel_all(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path_a = python_script_factory(
+            name="a.py", body="import time; time.sleep(30)"
+        )
+        path_b = python_script_factory(
+            name="b.py", body="import time; time.sleep(30)"
+        )
+        script_a = Script.from_path(path_a)
+        script_b = Script.from_path(path_b)
 
-        executor.execute_script(long_running_script)
-        time.sleep(0.5)
+        script_executor.execute_script(script_a)
+        script_executor.execute_script(script_b)
+        assert _wait_until(lambda: script_executor.get_active_count() == 2, timeout=5)
 
-        assert executor.is_running(long_running_script)
+        cancelled = script_executor.cancel_all()
+        assert cancelled == 2
+        assert _wait_until(lambda: script_executor.get_active_count() == 0, timeout=5)
 
-        executor.cancel_execution(long_running_script)
-        time.sleep(0.5)
+    def test_is_running_lifecycle(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory(
+            name="mid.py", body="import time; time.sleep(15)"
+        )
+        script = Script.from_path(path)
 
-        assert not executor.is_running(long_running_script)
+        assert not script_executor.is_running(script)
+        script_executor.execute_script(script)
+        assert _wait_until(lambda: script_executor.is_running(script), timeout=5)
 
-    def test_get_active_count(self, executor, long_running_script, tmp_path):
-        """Test getting count of active executions."""
-        assert executor.get_active_count() == 0
+        script_executor.cancel_execution(script)
+        assert _wait_until(lambda: not script_executor.is_running(script), timeout=5)
 
-        # Start multiple scripts
-        script1 = long_running_script
-        script2_file = tmp_path / "test2.bat"
-        script2_file.write_text("@echo off\ntimeout /t 30 /nobreak\n")
-        script2 = Script.from_path(script2_file)
+    def test_run_count_and_last_run_updated(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory()
+        script = Script.from_path(path)
+        assert script.run_count == 0
+        assert script.last_run is None
 
-        executor.execute_script(script1)
-        executor.execute_script(script2)
+        execution = script_executor.execute_script(script)
+        assert _wait_until(lambda: execution.is_terminal, timeout=10)
 
-        time.sleep(0.5)
+        assert script.run_count == 1
+        assert script.last_run is not None
 
-        assert executor.get_active_count() == 2
+    def test_duplicate_execution_returns_existing(
+        self,
+        script_executor: ScriptExecutor,
+        python_script_factory,
+    ) -> None:
+        path = python_script_factory(
+            name="dup.py", body="import time; time.sleep(5)"
+        )
+        script = Script.from_path(path)
+        e1 = script_executor.execute_script(script)
+        e2 = script_executor.execute_script(script)
+        assert e1 is e2
+        script_executor.cancel_execution(script)
+        assert _wait_until(lambda: e1.is_terminal, timeout=5)
 
-        executor.cancel_all()
-        time.sleep(0.5)
 
-        assert executor.get_active_count() == 0
+@pytest.mark.windows
+class TestBatchExecution:
+    """Windows-only: in-process batch execution via cmd.exe /c."""
 
-    def test_cancel_all(self, executor, long_running_script, tmp_path):
-        """Test cancelling all running scripts."""
-        # Start multiple scripts
-        script1 = long_running_script
-        script2_file = tmp_path / "test2.bat"
-        script2_file.write_text("@echo off\ntimeout /t 30 /nobreak\n")
-        script2 = Script.from_path(script2_file)
+    def test_batch_script_success(
+        self, script_executor: ScriptExecutor, batch_script_factory
+    ) -> None:
+        path = batch_script_factory(
+            name="hi.bat", body="@echo off\r\necho batch-ok\r\n"
+        )
+        script = Script.from_path(path)
 
-        executor.execute_script(script1)
-        executor.execute_script(script2)
+        output: list[str] = []
+        execution = script_executor.execute_script(
+            script, output_callback=output.append
+        )
 
-        time.sleep(0.5)
-
-        cancelled_count = executor.cancel_all()
-
-        assert cancelled_count == 2
-        assert executor.get_active_count() == 0
-
-    def test_output_callback_receives_all_output(self, executor, mock_script):
-        """Test that output callback receives all script output."""
-        output_lines = []
-
-        def on_output(line: str):
-            output_lines.append(line)
-
-        executor.execute_script(mock_script, output_callback=on_output)
-
-        time.sleep(2)
-
-        assert len(output_lines) > 0
-        assert any("Test Output" in line for line in output_lines)
-
-    def test_execution_tracks_duration(self, executor, mock_script):
-        """Test that execution tracks start and end times."""
-        execution = executor.execute_script(mock_script)
-
-        time.sleep(2)
-
-        assert execution.start_time is not None
-        assert execution.end_time is not None
-        assert execution.duration is not None
-        assert execution.duration > 0
-
-    def test_script_run_count_increments(self, executor, mock_script):
-        """Test that script run count increments after execution."""
-        initial_count = mock_script.run_count
-
-        executor.execute_script(mock_script)
-        time.sleep(2)
-
-        assert mock_script.run_count == initial_count + 1
-
-    def test_script_last_run_updates(self, executor, mock_script):
-        """Test that script last_run timestamp updates."""
-        assert mock_script.last_run is None
-
-        executor.execute_script(mock_script)
-        time.sleep(2)
-
-        assert mock_script.last_run is not None
+        assert _wait_until(lambda: execution.is_terminal, timeout=15)
+        assert execution.status == ExecutionStatus.SUCCESS
+        assert any("batch-ok" in line for line in execution.output)

@@ -1,116 +1,125 @@
-"""File system watcher for automatic script refresh."""
+"""File system watcher for automatic script refresh (debounced)."""
 
-import time
+from __future__ import annotations
+
+import threading
+from collections.abc import Callable
 from pathlib import Path
-from typing import Callable, Optional
 
 from loguru import logger
 from watchdog.events import FileSystemEvent, FileSystemEventHandler
 from watchdog.observers import Observer
+from watchdog.observers.api import BaseObserver
+
+SCRIPT_EXTENSIONS = frozenset({".py", ".bat", ".cmd", ".ps1"})
+
+
+class _DebouncedCallback:
+    """Schedule ``callback`` at most once per ``delay`` seconds."""
+
+    def __init__(self, callback: Callable[[], None], delay: float) -> None:
+        self._callback = callback
+        self._delay = delay
+        self._timer: threading.Timer | None = None
+        self._lock = threading.Lock()
+
+    def trigger(self) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+            self._timer = threading.Timer(self._delay, self._fire)
+            self._timer.daemon = True
+            self._timer.start()
+
+    def _fire(self) -> None:
+        try:
+            self._callback()
+        except Exception:  # noqa: BLE001
+            logger.exception("File watcher callback raised")
+
+    def cancel(self) -> None:
+        with self._lock:
+            if self._timer is not None:
+                self._timer.cancel()
+                self._timer = None
 
 
 class ScriptFolderHandler(FileSystemEventHandler):
-    """Handler for script folder file system events."""
+    """Handler that filters for script files and debounces the callback."""
 
-    def __init__(self, callback: Callable[[], None], debounce_seconds: float = 0.5):
-        """
-        Initialize the handler.
-
-        Args:
-            callback: Function to call when changes are detected
-            debounce_seconds: Minimum time between callback invocations
-        """
+    def __init__(self, debounced: _DebouncedCallback) -> None:
         super().__init__()
-        self.callback = callback
-        self.debounce_seconds = debounce_seconds
-        self.last_triggered = 0.0
-        self.script_extensions = {".py", ".bat", ".cmd", ".ps1"}
+        self._debounced = debounced
 
-    def _should_process(self, event: FileSystemEvent) -> bool:
-        """Check if the event should trigger a callback."""
-        # Ignore directory events
+    @staticmethod
+    def _is_script(event: FileSystemEvent) -> bool:
         if event.is_directory:
             return False
-
-        # Only process script files
-        path = Path(event.src_path)
-        if path.suffix.lower() not in self.script_extensions:
-            return False
-
-        # Debounce: don't trigger too frequently
-        current_time = time.time()
-        if current_time - self.last_triggered < self.debounce_seconds:
-            return False
-
-        return True
+        return Path(event.src_path).suffix.lower() in SCRIPT_EXTENSIONS
 
     def on_created(self, event: FileSystemEvent) -> None:
-        """Handle file creation events."""
-        if self._should_process(event):
+        if self._is_script(event):
             logger.info(f"Script added: {event.src_path}")
-            self.last_triggered = time.time()
-            self.callback()
+            self._debounced.trigger()
 
     def on_deleted(self, event: FileSystemEvent) -> None:
-        """Handle file deletion events."""
-        if self._should_process(event):
+        if self._is_script(event):
             logger.info(f"Script removed: {event.src_path}")
-            self.last_triggered = time.time()
-            self.callback()
+            self._debounced.trigger()
 
-    def on_modified(self, event: FileSystemEvent) -> None:
-        """Handle file modification events."""
-        if self._should_process(event):
-            logger.debug(f"Script modified: {event.src_path}")
-            # Don't refresh on modification, only on add/remove
+    def on_moved(self, event: FileSystemEvent) -> None:
+        dest = getattr(event, "dest_path", None)
+        if self._is_script(event) or (
+            dest is not None and Path(dest).suffix.lower() in SCRIPT_EXTENSIONS
+        ):
+            logger.info(f"Script moved: {event.src_path} -> {dest}")
+            self._debounced.trigger()
 
 
 class ScriptFolderWatcher:
     """Watches a folder for script file changes."""
 
-    def __init__(self, folder_path: Path, callback: Callable[[], None]):
-        """
-        Initialize the watcher.
-
-        Args:
-            folder_path: Path to the folder to watch
-            callback: Function to call when changes are detected
-        """
+    def __init__(
+        self,
+        folder_path: Path,
+        callback: Callable[[], None],
+        debounce_seconds: float = 0.5,
+    ) -> None:
         self.folder_path = folder_path
-        self.callback = callback
-        self.observer: Optional[Observer] = None
-        self.handler = ScriptFolderHandler(callback)
+        self._debounced = _DebouncedCallback(callback, debounce_seconds)
+        self._handler = ScriptFolderHandler(self._debounced)
+        self._observer: BaseObserver | None = None
 
     def start(self) -> None:
-        """Start watching the folder."""
-        if self.observer is not None:
+        if self._observer is not None:
             logger.warning("Watcher already started")
             return
-
         if not self.folder_path.exists():
             logger.warning(f"Folder does not exist: {self.folder_path}")
             return
 
-        self.observer = Observer()
-        self.observer.schedule(self.handler, str(self.folder_path), recursive=False)
-        self.observer.start()
-        logger.info(f"Started watching folder: {self.folder_path}")
+        self._observer = Observer()
+        self._observer.schedule(
+            self._handler, str(self.folder_path), recursive=False
+        )
+        self._observer.start()
+        logger.info(f"Watching folder: {self.folder_path}")
 
     def stop(self) -> None:
-        """Stop watching the folder."""
-        if self.observer is None:
+        self._debounced.cancel()
+        if self._observer is None:
             return
+        self._observer.stop()
+        self._observer.join(timeout=2.0)
+        self._observer = None
+        logger.debug("File watcher stopped")
 
-        self.observer.stop()
-        self.observer.join(timeout=2.0)
-        self.observer = None
-        logger.info("Stopped watching folder")
-
-    def __enter__(self) -> "ScriptFolderWatcher":
-        """Context manager entry."""
+    def __enter__(self) -> ScriptFolderWatcher:
         self.start()
         return self
 
-    def __exit__(self, exc_type, exc_val, exc_tb) -> None:  # type: ignore
-        """Context manager exit."""
+    def __exit__(self, exc_type: object, exc_val: object, exc_tb: object) -> None:
         self.stop()
+
+
+__all__ = ["ScriptFolderWatcher", "SCRIPT_EXTENSIONS"]

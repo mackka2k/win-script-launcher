@@ -137,6 +137,7 @@ Thumbs.db
 logs/
 *.log
 config.json
+cache.json
 scripts/*.exe
 scripts/*.lnk
 

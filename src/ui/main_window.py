@@ -1,22 +1,45 @@
-"""Main application window using CustomTkinter."""
+"""Main application window."""
+
+from __future__ import annotations
+
+import os
+import subprocess
+import sys
+from collections.abc import Callable
+from pathlib import Path
+from tkinter import messagebox
 
 import customtkinter as ctk
-from pathlib import Path
-from tkinter import messagebox # CTk doesn't have a message box, standard is fine or use CTkMessagebox if available (not standard)
-# Actually, sticking to tk.messagebox is the safest "standard" way even with CTk, though it looks native/os-styled.
-
 from loguru import logger
 
 from ..config import AppConfig
-from ..models import Script, ScriptExecution
+from ..exceptions import ScriptLauncherError, ValidationError
+from ..models import ExecutionStatus, Script, ScriptExecution
 from ..script_executor import ScriptExecutor
 from ..script_manager import ScriptManager
-from .components import ModernButton, OutputConsole, ScriptCard, SearchBar, StatusBar
+from .components import (
+    ModernButton,
+    OutputConsole,
+    ScriptCard,
+    SearchBar,
+    StatusBar,
+)
 from .theme import Theme
-import tkinter as tk # for mixins if needed
+
+STATUS_TAGS = {
+    ExecutionStatus.SUCCESS: ("success", "OK"),
+    ExecutionStatus.FAILED: ("error", "FAILED"),
+    ExecutionStatus.TIMEOUT: ("warning", "TIMEOUT"),
+    ExecutionStatus.CANCELLED: ("muted", "CANCELLED"),
+}
+
 
 class MainWindow:
-    """Main application window."""
+    """Main application window.
+
+    The window owns all UI state. Callbacks from background threads are
+    marshalled to the Tk main loop via :meth:`_on_main_thread`.
+    """
 
     def __init__(
         self,
@@ -24,257 +47,302 @@ class MainWindow:
         config: AppConfig,
         script_manager: ScriptManager,
         script_executor: ScriptExecutor,
-    ):
+        on_close: Callable[[], None] | None = None,
+    ) -> None:
         self.root = root
         self.config = config
         self.script_manager = script_manager
         self.script_executor = script_executor
+        self._on_close_callback = on_close
 
-        # Setup window
-        self._setup_window()
-        self._create_ui()
+        self._cards: dict[Path, ScriptCard] = {}
+        self._scripts: list[Script] = []
 
-        # Load scripts
+        self._build_ui()
         self.refresh_scripts()
+        logger.debug("Main window ready")
 
-        logger.info("Main window initialized")
+    # --- Public --------------------------------------------------------
 
-    def _setup_window(self) -> None:
-        """Setup window properties."""
-        self.root.title("Script Launcher") # Senior UI title
+    def refresh_scripts(self) -> None:
+        """Re-discover scripts and rebuild the card list."""
+        logger.debug("Refreshing scripts")
+        self._scripts = self.script_manager.discover_scripts()
+        self._render_scripts(self._scripts)
+        self.status_bar.set_right(f"{len(self._scripts)} scripts")
 
-        # Set window size
+    # --- Internal: layout ---------------------------------------------
+
+    def _build_ui(self) -> None:
+        self.root.title("Script Launcher")
         width = self.config.window.width
         height = self.config.window.height
-
-        # Center window
-        screen_width = self.root.winfo_screenwidth()
-        screen_height = self.root.winfo_screenheight()
-        x = (screen_width - width) // 2
-        y = (screen_height - height) // 2
-
+        screen_w = self.root.winfo_screenwidth()
+        screen_h = self.root.winfo_screenheight()
+        x = max(0, (screen_w - width) // 2)
+        y = max(0, (screen_h - height) // 2)
         self.root.geometry(f"{width}x{height}+{x}+{y}")
-        self.root.minsize(800, 600) # Slightly larger for senior feel
-
-        # Configure background
-        # CTk handles this by default for "Dark" mode, but we can enforce
-        # self.root.configure(fg_color=Theme.colors.bg_primary)
-
-        # Handle window close
+        self.root.minsize(820, 560)
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
 
-    def _create_ui(self) -> None:
-        """Create the user interface."""
-        
-        # Main Grid Layout
         self.root.grid_columnconfigure(0, weight=1)
-        self.root.grid_rowconfigure(2, weight=1) # Scripts area expands
+        self.root.grid_rowconfigure(2, weight=1)
 
-        # 1. Header (Title + Controls?)
-        self._create_header(row=0)
+        self._build_header(row=0)
+        self._build_search(row=1)
+        self._build_body(row=2)
+        self._build_controls(row=3)
 
-        # 2. Search Bar
-        self._create_search_bar(row=1)
-
-        # 3. Scripts Area (Scrollable)
-        self._create_scripts_area(row=2)
-
-        # 4. Controls (Bottom actions)
-        self._create_controls(row=3)
-
-        # 5. Status Bar
         self.status_bar = StatusBar(self.root)
         self.status_bar.grid(row=4, column=0, sticky="ew")
 
-    def _create_header(self, row: int) -> None:
-        """Create header section."""
-        header_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        header_frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(20, 10))
-        
-        # Title
-        title = ctk.CTkLabel(
-            header_frame,
+    def _build_header(self, row: int) -> None:
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(18, 8))
+        ctk.CTkLabel(
+            frame,
             text="Script Launcher",
             font=(Theme.fonts.family, Theme.fonts.size_title, "bold"),
-            text_color=Theme.colors.text_primary
-        )
-        title.pack(side="left")
+            text_color=Theme.colors.text_primary,
+        ).pack(side="left")
 
-    def _create_search_bar(self, row: int) -> None:
-        """Create search bar."""
-        search_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        search_frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(0, 10))
-        
-        self.search_bar = SearchBar(
-            search_frame,
-            on_search=self._on_search,
-            width=400 # Fixed width for clean look? Or expand? Let's expand
-        )
+    def _build_search(self, row: int) -> None:
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(0, 10))
+        self.search_bar = SearchBar(frame, on_search=self._on_search)
         self.search_bar.pack(fill="x")
 
-    def _create_scripts_area(self, row: int) -> None:
-        """Create scrollable scripts display area."""
-        
-        # CTkScrollableFrame allows easy scrolling without canvas hell
+    def _build_body(self, row: int) -> None:
+        body = ctk.CTkFrame(self.root, fg_color="transparent")
+        body.grid(row=row, column=0, sticky="nsew", padx=20, pady=(0, 10))
+        body.grid_columnconfigure(0, weight=3, uniform="body")
+        body.grid_columnconfigure(1, weight=2, uniform="body")
+        body.grid_rowconfigure(0, weight=1)
+
         self.scripts_container = ctk.CTkScrollableFrame(
-            self.root,
+            body,
             label_text="Available Scripts",
             label_font=(Theme.fonts.family, Theme.fonts.size_normal, "bold"),
-            fg_color=Theme.colors.bg_secondary,  # Container bg
-            label_fg_color=Theme.colors.bg_primary # Match parent
+            fg_color=Theme.colors.bg_secondary,
+            label_fg_color=Theme.colors.bg_tertiary,
         )
-        self.scripts_container.grid(row=row, column=0, sticky="nsew", padx=20, pady=(0, 10))
-        
-        # Grid inside scrollable frame
+        self.scripts_container.grid(row=0, column=0, sticky="nsew", padx=(0, 8))
         self.scripts_container.grid_columnconfigure(0, weight=1)
 
-    def _create_controls(self, row: int) -> None:
-        """Create control buttons."""
-        control_frame = ctk.CTkFrame(self.root, fg_color="transparent")
-        control_frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(0, 10))
-        
-        # Refresh
-        refresh_btn = ModernButton(
-            control_frame,
+        output_frame = ctk.CTkFrame(body, fg_color="transparent")
+        output_frame.grid(row=0, column=1, sticky="nsew", padx=(8, 0))
+        output_frame.grid_rowconfigure(1, weight=1)
+        output_frame.grid_columnconfigure(0, weight=1)
+
+        header = ctk.CTkFrame(output_frame, fg_color="transparent")
+        header.grid(row=0, column=0, sticky="ew", pady=(0, 6))
+        ctk.CTkLabel(
+            header,
+            text="Output",
+            font=(Theme.fonts.family, Theme.fonts.size_normal, "bold"),
+            text_color=Theme.colors.text_primary,
+        ).pack(side="left")
+        ModernButton(
+            header,
+            text="Clear",
+            command=self._clear_output,
+            fg_color=Theme.colors.bg_secondary,
+            hover_color=Theme.colors.bg_hover,
+            width=72,
+        ).pack(side="right")
+
+        self.output_console = OutputConsole(output_frame)
+        self.output_console.grid(row=1, column=0, sticky="nsew")
+
+    def _build_controls(self, row: int) -> None:
+        frame = ctk.CTkFrame(self.root, fg_color="transparent")
+        frame.grid(row=row, column=0, sticky="ew", padx=20, pady=(0, 10))
+
+        ModernButton(
+            frame,
             text="Refresh",
             command=self.refresh_scripts,
             fg_color=Theme.colors.bg_secondary,
-            hover_color=Theme.colors.bg_tertiary
-        )
-        refresh_btn.pack(side="left", padx=(0, 10))
+            hover_color=Theme.colors.bg_hover,
+        ).pack(side="left", padx=(0, 8))
 
-        # Open Folder
-        open_btn = ModernButton(
-            control_frame,
+        ModernButton(
+            frame,
             text="Open Folder",
             command=self._open_scripts_folder,
             fg_color=Theme.colors.bg_secondary,
-            hover_color=Theme.colors.bg_tertiary
-        )
-        open_btn.pack(side="left", padx=(0, 10))
+            hover_color=Theme.colors.bg_hover,
+        ).pack(side="left", padx=(0, 8))
 
-        # Stop All
-        self.stop_btn = ModernButton(
-            control_frame,
+        self.stop_all_btn = ModernButton(
+            frame,
             text="Stop All",
             command=self._stop_all_scripts,
-            fg_color=Theme.colors.error, # Red for danger
+            fg_color=Theme.colors.error,
             hover_color="#c0392b",
-            state="disabled"
+            state="disabled",
         )
-        self.stop_btn.pack(side="right")
+        self.stop_all_btn.pack(side="right")
 
-    def refresh_scripts(self) -> None:
-        """Refresh the scripts list."""
-        logger.info("Refreshing scripts")
+    # --- Internal: rendering ------------------------------------------
 
-        # Clear existing
-        for widget in self.scripts_container.winfo_children():
-            widget.destroy()
-
-        # Discover
-        scripts = self.script_manager.discover_scripts()
+    def _render_scripts(self, scripts: list[Script]) -> None:
+        for card in self._cards.values():
+            card.destroy()
+        self._cards.clear()
 
         if not scripts:
-            empty_label = ctk.CTkLabel(
+            ctk.CTkLabel(
                 self.scripts_container,
-                text="No scripts found.",
-                text_color=Theme.colors.text_tertiary
-            )
-            empty_label.pack(pady=20)
-        else:
-            for i, script in enumerate(sorted(scripts, key=lambda s: (s.category, s.name))):
-                card = ScriptCard(
-                    self.scripts_container,
-                    script=script,
-                    on_run=self._run_script
-                )
-                card.grid(row=i, column=0, sticky="ew", pady=4, padx=5)
+                text="No scripts found.\nDrop a .py, .bat, .cmd or .ps1 into the scripts/ folder.",
+                text_color=Theme.colors.text_tertiary,
+                justify="center",
+            ).grid(row=0, column=0, pady=24)
+            return
 
-        self.status_bar.set_status(f"Found {len(scripts)} scripts")
+        ordered = sorted(scripts, key=lambda s: (s.category.lower(), s.name.lower()))
+        for i, script in enumerate(ordered):
+            card = ScriptCard(
+                self.scripts_container,
+                script=script,
+                on_run=self._run_script,
+                on_cancel=self._cancel_script,
+            )
+            card.grid(row=i, column=0, sticky="ew", pady=4, padx=6)
+            self._cards[script.path] = card
+            if self.script_executor.is_running(script):
+                card.set_running(True)
+
+    # --- Internal: actions --------------------------------------------
 
     def _run_script(self, script: Script) -> None:
         logger.info(f"Running script: {script.name}")
 
-        if self.script_executor.is_running(script):
-            messagebox.showinfo("Already Running", f"'{script.name}' is already running!")
+        try:
+            self.script_manager.validate_script(script)
+        except ValidationError as e:
+            logger.error(f"Validation failed: {e}")
+            messagebox.showerror("Cannot run script", str(e))
             return
 
-        self.script_executor.execute_script(
-            script, output_callback=None, completion_callback=self._on_completion
-        )
+        if self.script_executor.is_running(script):
+            messagebox.showinfo(
+                "Already running", f"'{script.name}' is already running."
+            )
+            return
+
+        card = self._cards.get(script.path)
+        if card is not None:
+            card.set_running(True)
+
+        self.output_console.append(f"\n>>> {script.name}\n", tag="info")
+
+        try:
+            self.script_executor.execute_script(
+                script,
+                output_callback=self._on_output,
+                completion_callback=self._on_completion,
+            )
+        except ScriptLauncherError as e:
+            logger.error(f"Failed to start script: {e}")
+            messagebox.showerror("Execution failed", str(e))
+            if card is not None:
+                card.set_running(False)
+            return
+
         self._update_execution_status()
 
-    def _on_completion(self, execution: ScriptExecution) -> None:
-        logger.info(f"Script completed: {execution.script.name}")
-        # Need to schedule UI update on main thread? 
-        # Tkinter is not thread safe. 
-        # Usually logic calls callback from thread. 
-        # CTk/Tk requires after() for thread safety.
-        self.root.after(0, self._update_execution_status)
-
-    def _update_execution_status(self) -> None:
-        count = self.script_executor.get_active_count()
-        if count > 0:
-            self.status_bar.set_status(f"Running {count} scripts...", Theme.colors.warning)
-            self.stop_btn.configure(state="normal")
-        else:
-            self.status_bar.set_status("Ready", Theme.colors.success)
-            self.stop_btn.configure(state="disabled")
+    def _cancel_script(self, script: Script) -> None:
+        if messagebox.askyesno(
+            "Cancel script", f"Cancel '{script.name}'?"
+        ):
+            self.script_executor.cancel_execution(script)
 
     def _stop_all_scripts(self) -> None:
         count = self.script_executor.get_active_count()
-        if count == 0: return
-
-        if messagebox.askyesno("Stop Scripts", f"Stop {count} running script(s)?"):
+        if count == 0:
+            return
+        if messagebox.askyesno(
+            "Stop scripts", f"Stop {count} running script(s)?"
+        ):
             self.script_executor.cancel_all()
             self._update_execution_status()
 
     def _open_scripts_folder(self) -> None:
-        import os
-        import subprocess
-        import sys
+        folder = self.script_manager.scripts_dir
         try:
             if os.name == "nt":
-                os.startfile(str(self.script_manager.scripts_dir))
+                os.startfile(str(folder))  # type: ignore[attr-defined]
             elif sys.platform == "darwin":
-                subprocess.run(["open", str(self.script_manager.scripts_dir)])
+                subprocess.run(["open", str(folder)], check=False)
             else:
-                subprocess.run(["xdg-open", str(self.script_manager.scripts_dir)])
-        except Exception as e:
+                subprocess.run(["xdg-open", str(folder)], check=False)
+        except OSError as e:
             logger.error(f"Failed to open folder: {e}")
+            messagebox.showerror("Open folder", f"Could not open folder:\n{e}")
+
+    def _clear_output(self) -> None:
+        self.output_console.clear()
+
+    # --- Internal: callbacks ------------------------------------------
+
+    def _on_output(self, line: str) -> None:
+        # Called from worker thread – marshal to Tk main loop.
+        self._on_main_thread(lambda: self.output_console.append(line))
+
+    def _on_completion(self, execution: ScriptExecution) -> None:
+        self._on_main_thread(lambda: self._handle_completion(execution))
+
+    def _handle_completion(self, execution: ScriptExecution) -> None:
+        tag, label = STATUS_TAGS.get(execution.status, ("muted", execution.status.name))
+        duration = execution.duration
+        summary = f"<<< {execution.script.name} [{label}]"
+        if duration is not None:
+            summary += f" ({duration:.2f}s)"
+        if execution.error_message:
+            summary += f" {execution.error_message}"
+        self.output_console.append(summary + "\n", tag=tag)
+
+        card = self._cards.get(execution.script.path)
+        if card is not None:
+            card.set_running(False)
+        self._update_execution_status()
 
     def _on_search(self, query: str) -> None:
-        # Clear
-        for widget in self.scripts_container.winfo_children():
-            widget.destroy()
+        filtered = (
+            self._scripts
+            if not query
+            else self.script_manager.filter_scripts(query=query)
+        )
+        self._render_scripts(filtered)
 
-        if query:
-            scripts = self.script_manager.filter_scripts(query=query)
-        else:
-            scripts = self.script_manager.get_all_scripts()
-
-        for i, script in enumerate(sorted(scripts, key=lambda s: s.name)):
-            card = ScriptCard(
-                self.scripts_container,
-                script=script,
-                on_run=self._run_script
+    def _update_execution_status(self) -> None:
+        count = self.script_executor.get_active_count()
+        if count > 0:
+            self.status_bar.set_status(
+                f"Running {count} script(s)...", color=Theme.colors.warning
             )
-            card.grid(row=i, column=0, sticky="ew", pady=4, padx=5)
+            self.stop_all_btn.configure(state="normal")
+        else:
+            self.status_bar.set_status("Ready", color=Theme.colors.success)
+            self.stop_all_btn.configure(state="disabled")
 
     def _on_closing(self) -> None:
-        if self.script_executor.get_active_count() > 0:
-            if not messagebox.askyesno("Scripts Running", "Scripts are still running. Exit anyway?"):
-                return
-        
-        # Save config... (omitted implementation for brevity, assuming existing logic or not strictly needed for UI task)
-        # Actually I should call config save if it was there.
-        # Looking at previous file: yes, it saved config.
-        try:
-            config_path = Path(self.script_manager.scripts_dir).parent / "config.json"
-            self.config.save(config_path)
-        except Exception as e:
-            logger.error(f"Failed to save config: {e}")
-
-        self.script_executor.cancel_all()
+        if self.script_executor.get_active_count() > 0 and not messagebox.askyesno(
+            "Scripts running",
+            "Scripts are still running. Exit anyway?",
+        ):
+            return
+        if self._on_close_callback is not None:
+            try:
+                self._on_close_callback()
+            except Exception:  # noqa: BLE001
+                logger.exception("on_close callback raised")
         self.root.destroy()
+
+    def _on_main_thread(self, fn: Callable[[], None]) -> None:
+        try:
+            self.root.after(0, fn)
+        except RuntimeError:
+            # Tk root has been destroyed; drop the event.
+            logger.debug("Dropped UI event after root destroyed")

@@ -1,10 +1,11 @@
 """Process management utilities for script execution."""
 
+from __future__ import annotations
+
 import os
 import subprocess
 import sys
 from pathlib import Path
-from typing import Optional
 
 from loguru import logger
 
@@ -12,90 +13,108 @@ from ..models import ScriptType
 
 
 def get_script_command(script_path: Path, script_type: ScriptType) -> list[str]:
-    """
-    Get the command to execute a script based on its type.
+    """Get the command to execute a script based on its type.
 
-    Args:
-        script_path: Path to the script file
-        script_type: Type of the script
+    Batch scripts are routed through ``cmd.exe /c`` so that their exit
+    code is reliably reported and ``CREATE_NO_WINDOW`` can suppress the
+    console flash.
 
-    Returns:
-        Command as a list of strings
+    Raises:
+        ValueError: If ``script_type`` is unsupported.
     """
+    path_str = str(script_path)
     if script_type == ScriptType.PYTHON:
-        return [sys.executable, str(script_path)]
-    elif script_type == ScriptType.BATCH:
-        return [str(script_path)]
-    elif script_type == ScriptType.POWERSHELL:
-        return ["powershell.exe", "-ExecutionPolicy", "Bypass", "-File", str(script_path)]
-    else:
-        raise ValueError(f"Unsupported script type: {script_type}")
+        return [sys.executable, "-u", path_str]
+    if script_type == ScriptType.BATCH:
+        if os.name == "nt":
+            return ["cmd.exe", "/c", path_str]
+        raise ValueError("Batch scripts are only supported on Windows")
+    if script_type == ScriptType.POWERSHELL:
+        if os.name == "nt":
+            return [
+                "powershell.exe",
+                "-NoProfile",
+                "-ExecutionPolicy",
+                "Bypass",
+                "-File",
+                path_str,
+            ]
+        # pwsh (PowerShell Core) fallback on non-Windows.
+        return ["pwsh", "-NoProfile", "-File", path_str]
+    raise ValueError(f"Unsupported script type: {script_type}")
 
 
 def create_process(
-    command: list[str], cwd: Optional[Path] = None, shell: bool = False
-) -> subprocess.Popen:  # type: ignore
-    """
-    Create a subprocess for script execution.
-
-    Args:
-        command: Command to execute
-        cwd: Working directory for the process
-        shell: Whether to use shell execution
-
-    Returns:
-        Popen process object
-    """
+    command: list[str],
+    cwd: Path | None = None,
+    env: dict[str, str] | None = None,
+) -> subprocess.Popen[str]:
+    """Spawn a subprocess with stdout/stderr capture and no console flash."""
     creation_flags = 0
+    startupinfo = None
     if os.name == "nt":
-        # Prevent console window from appearing on Windows
-        creation_flags = subprocess.CREATE_NO_WINDOW
+        creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+        startupinfo = subprocess.STARTUPINFO()  # type: ignore[attr-defined]
+        startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW  # type: ignore[attr-defined]
 
-    process = subprocess.Popen(
+    return subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
+        stdin=subprocess.DEVNULL,
         text=True,
+        encoding="utf-8",
+        errors="replace",
         bufsize=1,
-        universal_newlines=True,
         cwd=str(cwd) if cwd else None,
-        shell=shell,
+        env=env,
+        shell=False,
         creationflags=creation_flags,
+        startupinfo=startupinfo,
     )
 
-    return process
 
+def launch_detached(script_path: Path) -> None:
+    """Launch a script in a detached, user-visible window.
 
-def terminate_process(process: subprocess.Popen, timeout: float = 2.0) -> bool:  # type: ignore
+    Used for interactive batch scripts that require their own console.
+    No output capture, no cancellation.
     """
-    Gracefully terminate a process with fallback to force kill.
+    if os.name == "nt":
+        os.startfile(str(script_path))  # type: ignore[attr-defined]
+        return
+    # Non-Windows best-effort fallback.
+    subprocess.Popen(
+        ["xdg-open", str(script_path)],
+        stdin=subprocess.DEVNULL,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        start_new_session=True,
+    )
 
-    Args:
-        process: Process to terminate
-        timeout: Seconds to wait before force killing
 
-    Returns:
-        True if process was terminated successfully
-    """
+def terminate_process(
+    process: subprocess.Popen[str], timeout: float = 2.0
+) -> bool:
+    """Gracefully terminate a process, falling back to force kill."""
     if process.poll() is not None:
-        # Process already terminated
         return True
 
     try:
-        # Try graceful termination first
         process.terminate()
-
         try:
             process.wait(timeout=timeout)
-            logger.info("Process terminated gracefully")
+            logger.debug("Process terminated gracefully")
             return True
         except subprocess.TimeoutExpired:
-            # Force kill if graceful termination fails
             logger.warning("Graceful termination timed out, force killing process")
             process.kill()
-            process.wait(timeout=1.0)
+            try:
+                process.wait(timeout=1.0)
+            except subprocess.TimeoutExpired:
+                logger.error("Process failed to exit after kill()")
+                return False
             return True
-    except Exception as e:
+    except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to terminate process: {e}")
         return False

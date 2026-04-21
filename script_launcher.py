@@ -1,12 +1,13 @@
 """Script Launcher entry point."""
 
+from __future__ import annotations
+
 import sys
 from pathlib import Path
 
-# Add src to path for imports
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
-from src.app import main
+from src.app import main  # noqa: E402
 
 if __name__ == "__main__":
     main()

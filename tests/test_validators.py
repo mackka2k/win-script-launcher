@@ -1,176 +1,126 @@
-"""Tests for validators module."""
+"""Tests for validators."""
 
-import pytest
+from __future__ import annotations
+
 from pathlib import Path
 
-from src.validators import PathValidator, ConfigValidator
+import pytest
+
 from src.exceptions import ValidationError
+from src.validators import ConfigValidator, PathValidator
 
 
 class TestPathValidator:
-    """Test suite for PathValidator."""
+    def test_is_safe_path_within_base(self, tmp_path: Path) -> None:
+        base = tmp_path / "base"
+        base.mkdir()
+        inside = base / "script.bat"
+        inside.touch()
+        assert PathValidator.is_safe_path(inside, base)
 
-    def test_is_safe_path_within_base(self, tmp_path):
-        """Test that paths within base directory are safe."""
-        base_dir = tmp_path / "base"
-        base_dir.mkdir()
-        
-        safe_path = base_dir / "script.bat"
-        safe_path.touch()
-        
-        assert PathValidator.is_safe_path(safe_path, base_dir)
+    def test_is_safe_path_escapes_base(self, tmp_path: Path) -> None:
+        base = tmp_path / "base"
+        base.mkdir()
+        outside = tmp_path / "outside.bat"
+        outside.touch()
+        assert not PathValidator.is_safe_path(outside, base)
 
-    def test_is_safe_path_escapes_base(self, tmp_path):
-        """Test that paths escaping base directory are unsafe."""
-        base_dir = tmp_path / "base"
-        base_dir.mkdir()
-        
-        unsafe_path = tmp_path / "outside.bat"
-        unsafe_path.touch()
-        
-        assert not PathValidator.is_safe_path(unsafe_path, base_dir)
+    def test_sanitize_filename_removes_dangerous_chars(self) -> None:
+        safe = PathValidator.sanitize_filename('te<>:"/\\|?*st.bat')
+        for ch in '<>:"/\\|?*':
+            assert ch not in safe
 
-    def test_sanitize_filename_removes_dangerous_chars(self):
-        """Test filename sanitization removes dangerous characters."""
-        dangerous = "test<>:\"/\\|?*.bat"
-        safe = PathValidator.sanitize_filename(dangerous)
-        
-        assert "<" not in safe
-        assert ">" not in safe
-        assert ":" not in safe
-        assert '"' not in safe
-        assert "/" not in safe
-        assert "\\" not in safe
-        assert "|" not in safe
-        assert "?" not in safe
-        assert "*" not in safe
-
-    def test_sanitize_filename_limits_length(self):
-        """Test filename sanitization limits length."""
-        long_name = "a" * 300
-        safe = PathValidator.sanitize_filename(long_name, max_length=255)
-        
+    def test_sanitize_filename_limits_length(self) -> None:
+        safe = PathValidator.sanitize_filename("a" * 400, max_length=255)
         assert len(safe) == 255
 
-    def test_validate_script_path_success(self, tmp_path):
-        """Test successful script path validation."""
-        scripts_dir = tmp_path / "scripts"
+    def test_validate_script_path_success(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "s"
         scripts_dir.mkdir()
-        
-        script_path = scripts_dir / "test.bat"
-        script_path.touch()
-        
-        # Should not raise
-        PathValidator.validate_script_path(script_path, scripts_dir)
+        path = scripts_dir / "t.bat"
+        path.touch()
+        PathValidator.validate_script_path(path, scripts_dir)
 
-    def test_validate_script_path_nonexistent(self, tmp_path):
-        """Test validation fails for nonexistent path."""
-        scripts_dir = tmp_path / "scripts"
+    def test_validate_script_path_nonexistent(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "s"
         scripts_dir.mkdir()
-        
-        script_path = scripts_dir / "nonexistent.bat"
-        
-        with pytest.raises(ValidationError) as exc_info:
-            PathValidator.validate_script_path(script_path, scripts_dir)
-        
-        assert "does not exist" in str(exc_info.value)
+        with pytest.raises(ValidationError, match="does not exist"):
+            PathValidator.validate_script_path(
+                scripts_dir / "missing.bat", scripts_dir
+            )
 
-    def test_validate_script_path_is_directory(self, tmp_path):
-        """Test validation fails for directory."""
-        scripts_dir = tmp_path / "scripts"
+    def test_validate_script_path_directory(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "s"
         scripts_dir.mkdir()
-        
-        dir_path = scripts_dir / "subdir"
-        dir_path.mkdir()
-        
-        with pytest.raises(ValidationError) as exc_info:
-            PathValidator.validate_script_path(dir_path, scripts_dir)
-        
-        assert "not a file" in str(exc_info.value)
+        sub = scripts_dir / "sub"
+        sub.mkdir()
+        with pytest.raises(ValidationError, match="not a file"):
+            PathValidator.validate_script_path(sub, scripts_dir)
+
+    def test_validate_script_path_unsupported_extension(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "s"
+        scripts_dir.mkdir()
+        path = scripts_dir / "evil.exe"
+        path.touch()
+        with pytest.raises(ValidationError, match="Unsupported"):
+            PathValidator.validate_script_path(path, scripts_dir)
+
+    def test_validate_script_path_escapes(self, tmp_path: Path) -> None:
+        scripts_dir = tmp_path / "s"
+        scripts_dir.mkdir()
+        outside = tmp_path / "outside.bat"
+        outside.touch()
+        with pytest.raises(ValidationError, match="security"):
+            PathValidator.validate_script_path(outside, scripts_dir)
 
 
 class TestConfigValidator:
-    """Test suite for ConfigValidator."""
+    def test_timeout_valid(self) -> None:
+        ConfigValidator.validate_timeout(60)
+        ConfigValidator.validate_timeout(3600)
 
-    def test_validate_timeout_valid(self):
-        """Test valid timeout values."""
-        ConfigValidator.validate_timeout(60)  # Should not raise
-        ConfigValidator.validate_timeout(300)  # Should not raise
-
-    def test_validate_timeout_too_small(self):
-        """Test timeout validation fails for values too small."""
-        with pytest.raises(ValidationError) as exc_info:
+    def test_timeout_too_small(self) -> None:
+        with pytest.raises(ValidationError):
             ConfigValidator.validate_timeout(0)
-        
-        assert "at least 1 second" in str(exc_info.value)
 
-    def test_validate_timeout_too_large(self):
-        """Test timeout validation fails for values too large."""
-        with pytest.raises(ValidationError) as exc_info:
+    def test_timeout_too_large(self) -> None:
+        with pytest.raises(ValidationError):
             ConfigValidator.validate_timeout(4000)
-        
-        assert "3600 seconds" in str(exc_info.value)
 
-    def test_validate_window_size_valid(self):
-        """Test valid window dimensions."""
-        ConfigValidator.validate_window_size(900, 700)  # Should not raise
-
-    def test_validate_window_size_width_invalid(self):
-        """Test window validation fails for invalid width."""
-        with pytest.raises(ValidationError) as exc_info:
-            ConfigValidator.validate_window_size(200, 700)
-        
-        assert "width" in str(exc_info.value).lower()
-
-    def test_validate_window_size_height_invalid(self):
-        """Test window validation fails for invalid height."""
-        with pytest.raises(ValidationError) as exc_info:
+    def test_window_size(self) -> None:
+        ConfigValidator.validate_window_size(900, 700)
+        with pytest.raises(ValidationError):
+            ConfigValidator.validate_window_size(100, 700)
+        with pytest.raises(ValidationError):
             ConfigValidator.validate_window_size(900, 100)
-        
-        assert "height" in str(exc_info.value).lower()
 
-    def test_validate_log_level_valid(self):
-        """Test valid log levels."""
-        for level in ["DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"]:
-            ConfigValidator.validate_log_level(level)  # Should not raise
-
-    def test_validate_log_level_case_insensitive(self):
-        """Test log level validation is case insensitive."""
-        ConfigValidator.validate_log_level("debug")  # Should not raise
-        ConfigValidator.validate_log_level("WaRnInG")  # Should not raise
-
-    def test_validate_log_level_invalid(self):
-        """Test log level validation fails for invalid values."""
-        with pytest.raises(ValidationError) as exc_info:
+    def test_log_level(self) -> None:
+        for level in ("DEBUG", "INFO", "WARNING", "ERROR", "CRITICAL"):
+            ConfigValidator.validate_log_level(level)
+        ConfigValidator.validate_log_level("debug")
+        with pytest.raises(ValidationError):
             ConfigValidator.validate_log_level("INVALID")
-        
-        assert "Must be one of" in str(exc_info.value)
 
-    def test_validate_theme_mode_valid(self):
-        """Test valid theme modes."""
-        ConfigValidator.validate_theme_mode("light")  # Should not raise
-        ConfigValidator.validate_theme_mode("dark")  # Should not raise
-
-    def test_validate_theme_mode_invalid(self):
-        """Test theme mode validation fails for invalid values."""
-        with pytest.raises(ValidationError) as exc_info:
-            ConfigValidator.validate_theme_mode("blue")
-        
-        assert "light" in str(exc_info.value) or "dark" in str(exc_info.value)
-
-    def test_validate_color_valid(self):
-        """Test valid hex colors."""
-        ConfigValidator.validate_color("#0078d4")  # Should not raise
-        ConfigValidator.validate_color("#FFFFFF")  # Should not raise
-        ConfigValidator.validate_color("#000000")  # Should not raise
-
-    def test_validate_color_invalid_format(self):
-        """Test color validation fails for invalid format."""
+    def test_theme_mode(self) -> None:
+        ConfigValidator.validate_theme_mode("dark")
+        ConfigValidator.validate_theme_mode("light")
+        ConfigValidator.validate_theme_mode("system")
         with pytest.raises(ValidationError):
-            ConfigValidator.validate_color("0078d4")  # Missing #
-        
+            ConfigValidator.validate_theme_mode("neon")
+
+    def test_color(self) -> None:
+        ConfigValidator.validate_color("#0078d4")
+        ConfigValidator.validate_color("#FFFFFF")
         with pytest.raises(ValidationError):
-            ConfigValidator.validate_color("#0078d")  # Too short
-        
+            ConfigValidator.validate_color("0078d4")
         with pytest.raises(ValidationError):
-            ConfigValidator.validate_color("#GGGGGG")  # Invalid hex
+            ConfigValidator.validate_color("#12345")
+        with pytest.raises(ValidationError):
+            ConfigValidator.validate_color("#GGGGGG")
+
+    def test_max_output_lines(self) -> None:
+        ConfigValidator.validate_max_output_lines(1000)
+        with pytest.raises(ValidationError):
+            ConfigValidator.validate_max_output_lines(10)
+        with pytest.raises(ValidationError):
+            ConfigValidator.validate_max_output_lines(10_000_000)

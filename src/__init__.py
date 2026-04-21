@@ -1,6 +1,8 @@
 """Script Launcher - A modern GUI application for running scripts."""
 
-__version__ = "2.1.0"
+from __future__ import annotations
+
+__version__ = "3.0.0"
 __author__ = "Script Launcher Team"
 
 from .app import Application, main
@@ -19,4 +21,5 @@ __all__ = [
     "ExecutionStatus",
     "ScriptManager",
     "ScriptExecutor",
+    "__version__",
 ]

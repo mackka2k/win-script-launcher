@@ -1,60 +1,76 @@
 """Test configuration and fixtures."""
 
-import pytest
+from __future__ import annotations
+
+import os
 from pathlib import Path
-import tempfile
-import shutil
+
+import pytest
 
 from src.config import AppConfig
-from src.script_manager import ScriptManager
 from src.script_executor import ScriptExecutor
+from src.script_manager import ScriptManager
+
+IS_WINDOWS = os.name == "nt"
 
 
 @pytest.fixture
-def temp_dir():
-    """Create a temporary directory for tests."""
-    temp = Path(tempfile.mkdtemp())
-    yield temp
-    shutil.rmtree(temp)
+def scripts_dir(tmp_path: Path) -> Path:
+    folder = tmp_path / "scripts"
+    folder.mkdir()
+    return folder
 
 
 @pytest.fixture
-def scripts_dir(temp_dir):
-    """Create a temporary scripts directory."""
-    scripts = temp_dir / "scripts"
-    scripts.mkdir()
-    return scripts
+def cache_path(tmp_path: Path) -> Path:
+    return tmp_path / "cache.json"
 
 
 @pytest.fixture
-def sample_python_script(scripts_dir):
-    """Create a sample Python script."""
-    script = scripts_dir / "test_script.py"
-    script.write_text('print("Hello from test script!")')
-    return script
-
-
-@pytest.fixture
-def sample_batch_script(scripts_dir):
-    """Create a sample batch script."""
-    script = scripts_dir / "test_script.bat"
-    script.write_text('@echo off\necho Hello from batch script!')
-    return script
-
-
-@pytest.fixture
-def app_config():
-    """Create a test app configuration."""
+def app_config() -> AppConfig:
     return AppConfig()
 
 
 @pytest.fixture
-def script_manager(scripts_dir):
-    """Create a script manager instance."""
-    return ScriptManager(scripts_dir)
+def script_manager(scripts_dir: Path, cache_path: Path) -> ScriptManager:
+    return ScriptManager(scripts_dir, cache_path=cache_path)
 
 
 @pytest.fixture
-def script_executor():
-    """Create a script executor instance."""
-    return ScriptExecutor(timeout_seconds=30)
+def script_executor() -> ScriptExecutor:
+    return ScriptExecutor(timeout_seconds=10)
+
+
+@pytest.fixture
+def python_script_factory(scripts_dir: Path):
+    """Factory that creates a Python script returning the given exit code."""
+
+    def make(name: str = "hello.py", body: str = "print('hello')") -> Path:
+        path = scripts_dir / name
+        path.write_text(body, encoding="utf-8")
+        return path
+
+    return make
+
+
+@pytest.fixture
+def batch_script_factory(scripts_dir: Path):
+    """Factory that creates a batch script (Windows only)."""
+
+    def make(name: str = "hello.bat", body: str = "@echo off\necho hello\n") -> Path:
+        path = scripts_dir / name
+        path.write_text(body, encoding="utf-8")
+        return path
+
+    return make
+
+
+def pytest_collection_modifyitems(config, items):  # noqa: ARG001
+    """Skip Windows-only tests on non-Windows platforms."""
+    skip_non_windows = pytest.mark.skip(reason="Windows-only")
+    for item in items:
+        if "windows" in item.keywords and not IS_WINDOWS:
+            item.add_marker(skip_non_windows)
+
+
+__all__ = ["IS_WINDOWS"]
