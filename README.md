@@ -48,13 +48,30 @@ python script_launcher.py
    {
      "cleanup.bat": {
        "category": "Maintenance",
-       "description": "Clears temp folders and caches."
+       "description": "Clears temp folders and caches.",
+       "risk_level": "moderate",
+       "requires_admin": true,
+       "requires_reboot": false,
+       "expected_changes": [
+         "Deletes temporary files and cache folders."
+       ],
+       "backup_targets": ["files"],
+       "preview_command": "cleanup.bat --dry-run"
      }
    }
    ```
 
 3. Launch the app, select a script, click **Run**. Output streams into the
    embedded console; a per-card **Cancel** button appears while running.
+
+Script cards show category and risk badges (`Safe`, `Moderate`,
+`Destructive`, `Requires admin`, `Requires reboot`) so risky actions are
+visible before execution. If metadata omits these fields, the launcher infers
+reasonable defaults from the script content.
+
+Risky scripts require confirmation before execution. The confirmation dialog
+shows expected changes and backup targets, and each run writes an audit log to
+`logs/scripts/<script-name>/<timestamp>.log`.
 
 ## Configuration
 

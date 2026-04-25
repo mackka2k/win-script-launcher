@@ -2,6 +2,15 @@
 setlocal EnableDelayedExpansion
 title FPS Booster - Gaming Optimizer
 
+
+set "SCRIPT_BACKUP_TARGETS=registry power"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    FPS Booster - Gaming Optimizer
 echo ============================================
@@ -55,7 +64,7 @@ echo [OK] High Performance rezimas aktyvuotas.
 
 echo.
 echo ============================================
-echo    FPS BOOST BAIGTAS! 🎮⚡
+echo    FPS BOOST BAIGTAS!
 echo ============================================
 echo.
 echo Pakeitimai:

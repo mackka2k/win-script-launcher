@@ -2,6 +2,15 @@
 setlocal EnableDelayedExpansion
 title CMD Setup - Terminal Optimizer
 
+
+set "SCRIPT_BACKUP_TARGETS=registry"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    CMD Setup - Terminal Optimizer
 echo ============================================
@@ -36,7 +45,7 @@ echo [OK] Beep isjungtas.
 
 echo.
 echo ============================================
-echo    OPTIMIZAVIMAS BAIGTAS! ✨
+echo    OPTIMIZAVIMAS BAIGTAS!
 echo ============================================
 echo.
 echo Pakeitimai:

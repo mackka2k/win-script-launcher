@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Port Killer Pro
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Port Killer Pro
@@ -26,15 +27,15 @@ for /f "tokens=5" %%a in ('netstat -aon ^| findstr :%port% ^| findstr LISTENING'
 )
 
 if "%pid%"=="" (
-    echo [✓] Portas %port% yra LAISVAS (jokia programa jo nenaudoja).
+    echo [OK] Portas %port% yra LAISVAS (jokia programa jo nenaudoja).
 ) else (
     echo [!] RASTAS PROCESAS (PID: !pid!)
     echo.
-    
+
     :: Show process info
     tasklist /FI "PID eq !pid!"
     echo.
-    
+
     set /p kill="Ar norite NUZUDYTI ši procesa? (Y/N): "
     if /i "!kill!"=="Y" (
         taskkill /F /PID !pid!

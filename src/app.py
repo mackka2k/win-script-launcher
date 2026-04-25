@@ -15,6 +15,7 @@ from .logger import setup_logging
 from .script_executor import ScriptExecutor
 from .script_manager import ScriptManager
 from .ui.main_window import MainWindow
+from .ui.theme import Theme
 from .utils.admin import elevate_privileges, is_admin
 from .utils.file_watcher import ScriptFolderWatcher
 
@@ -43,6 +44,7 @@ class Application:
 
     def run(self) -> None:
         """Run the application main loop."""
+        self._stabilize_windows_dpi()
         self.config = AppConfig.load(self.config_path)
         setup_logging(self.log_dir, log_level=self.config.log_level)
         logger.info("=" * 60)
@@ -63,9 +65,10 @@ class Application:
         )
 
         ctk.set_appearance_mode(self.config.theme.mode.capitalize())
-        ctk.set_default_color_theme("dark-blue")
+        ctk.set_default_color_theme("blue")
 
         root = ctk.CTk()
+        root.configure(fg_color=Theme.colors.bg_primary)
         self.main_window = MainWindow(
             root,
             self.config,
@@ -152,6 +155,29 @@ class Application:
         if self.file_watcher is not None:
             self.file_watcher.stop()
         logger.info("Shutdown complete")
+
+    @staticmethod
+    def _stabilize_windows_dpi() -> None:
+        """Avoid expensive per-monitor Tk rescaling while dragging windows.
+
+        Tk/CustomTkinter can stutter badly when crossing monitors with
+        different DPI scales. System-DPI awareness keeps the app at one stable
+        scale for the session instead of rebuilding metrics during the drag.
+        """
+        if sys.platform != "win32":
+            return
+        try:
+            import ctypes
+
+            try:
+                # PROCESS_SYSTEM_DPI_AWARE
+                ctypes.windll.shcore.SetProcessDpiAwareness(1)
+            except Exception:  # noqa: BLE001 - fallback for older Windows
+                ctypes.windll.user32.SetProcessDPIAware()
+            ctk.set_widget_scaling(1.0)
+            ctk.set_window_scaling(1.0)
+        except Exception as e:  # noqa: BLE001 - DPI setup must not block startup
+            logger.debug(f"DPI stabilization skipped: {e}")
 
 
 def main() -> None:

@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Registry Backup
 echo ============================================
 echo    Windows Registry Backup
 echo ============================================

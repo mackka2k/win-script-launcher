@@ -1,12 +1,22 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Firewall Basic Hardener - Inbound Defense 🛡️⚓
+title Firewall Basic Hardener - Inbound Defense ⚓
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry network firewall"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Firewall Basic Hardener
 echo ============================================
 echo.
-echo Sis skriptas pritaikys rekomenduojamus saugumo 
+echo Sis skriptas pritaikys rekomenduojamus saugumo
 echo nustatymus tavo Windows Firewall Inbound srautui:
 echo  - Uzblokuos nereikalaujama prisijungimo bandoma is isores.
 echo  - Isjungs nesaugu Ping (ICMP) reagavima.
@@ -45,12 +55,12 @@ echo [OK] Rizikingi kanalai uždaryti.
 
 echo.
 echo ============================================
-echo     firewall_basic_hardener.bat - BAIGTA! 🛡️🚀
+echo     firewall_basic_hardener.bat - BAIGTA!
 echo ============================================
 echo.
 echo Tavo sistema dabar yra saugesnė "Inbound" lygiu.
-echo Pastaba: Jei naudoji vietinį failų dalinimąsi tarp 
-echo savo kompiuterių, gali tekti rankiniu būdu 
+echo Pastaba: Jei naudoji vietinį failų dalinimąsi tarp
+echo savo kompiuterių, gali tekti rankiniu būdu
 echo leisti SMB savo vietiniame tinkle.
 echo.
 pause

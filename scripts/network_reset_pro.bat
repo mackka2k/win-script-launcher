@@ -1,6 +1,16 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Network Reset PRO
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry network firewall"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Network Reset PRO
@@ -72,7 +82,7 @@ echo [OK] ARP cache isvalytas.
 
 echo.
 echo ============================================
-echo    NETWORK RESET BAIGTAS! 🌐✨
+echo    NETWORK RESET BAIGTAS!
 echo ============================================
 echo.
 echo Atlikti veiksmai:

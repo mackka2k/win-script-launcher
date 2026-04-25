@@ -35,8 +35,8 @@ def _json_default(obj: Any) -> Any:
 class ThemeConfig:
     """Theme configuration."""
 
-    mode: str = "dark"
-    accent_color: str = "#1f6aa5"
+    mode: str = "light"
+    accent_color: str = "#000080"
 
     def __post_init__(self) -> None:
         ConfigValidator.validate_theme_mode(self.mode)
@@ -84,7 +84,7 @@ class AppConfig:
     window: WindowConfig = field(default_factory=WindowConfig)
     execution: ExecutionConfig = field(default_factory=ExecutionConfig)
     enable_file_watcher: bool = True
-    check_admin_on_startup: bool = True
+    check_admin_on_startup: bool = False
     log_level: str = "INFO"
 
     def __post_init__(self) -> None:
@@ -116,9 +116,7 @@ class AppConfig:
         except json.JSONDecodeError as e:
             raise ConfigurationError(f"Invalid JSON: {e}", config_path) from e
         except TypeError as e:
-            raise ConfigurationError(
-                f"Invalid config structure: {e}", config_path
-            ) from e
+            raise ConfigurationError(f"Invalid config structure: {e}", config_path) from e
         except Exception as e:  # noqa: BLE001 - never let config break startup
             logger.warning(f"Error loading config: {e}. Using defaults.")
             return cls()
@@ -132,9 +130,7 @@ class AppConfig:
                 json.dump(asdict(self), f, indent=2, default=_json_default)
             tmp_path.replace(config_path)
         except OSError as e:
-            raise ConfigurationError(
-                f"Failed to save config: {e}", config_path
-            ) from e
+            raise ConfigurationError(f"Failed to save config: {e}", config_path) from e
 
     def to_dict(self) -> dict[str, Any]:
         return asdict(self)
@@ -148,6 +144,12 @@ class CachedScript:
     name: str
     description: str = ""
     category: str = "General"
+    risk_level: str = "moderate"
+    requires_admin: bool = False
+    requires_reboot: bool = False
+    expected_changes: list[str] = field(default_factory=list)
+    backup_targets: list[str] = field(default_factory=list)
+    preview_command: str | None = None
     last_run: str | None = None  # ISO 8601
     run_count: int = 0
 

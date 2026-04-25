@@ -1,0 +1,1 @@
+Get-ChildItem -Path "$env:USERPROFILE" -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { (Get-ChildItem $_.FullName -Force -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0 } | Select-Object -ExpandProperty FullName | Out-File -FilePath "$env:TEMP_FILE" -Encoding UTF8

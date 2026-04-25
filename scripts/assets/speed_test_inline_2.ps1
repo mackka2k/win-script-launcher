@@ -1,0 +1,1 @@
+$r = Test-Connection -ComputerName 8.8.8.8 -Count 10 -ErrorAction SilentlyContinue; if ($r) { $m = $r | Measure-Object -Property ResponseTime -Average -Minimum -Maximum; Write-Host ('Average latency: ' + [math]::Round($m.Average, 1) + ' ms'); Write-Host ('Min/Max latency: ' + $m.Minimum + '/' + $m.Maximum + ' ms') } else { Write-Host 'Latency test failed.' -ForegroundColor Red }

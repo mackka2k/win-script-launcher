@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Network Diagnostics
 echo ============================================
 echo    Network Diagnostics Script
 echo ============================================

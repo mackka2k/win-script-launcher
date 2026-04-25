@@ -1,6 +1,16 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Latency Nitro Fix - 0.5ms Precision ⚡🦾
+title Latency Nitro Fix - 0.5ms Precision
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Latency Nitro Fix - System Timer Optimizer
@@ -34,17 +44,17 @@ reg add "HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\kernel" /v "Globa
 echo [OK] Registro raktai prideti.
 
 echo [3/3] Tikrinamas dabartinis Timer Resolution...
-powershell -NoProfile -Command "$code = '[DllImport(\"ntdll.dll\")] public static extern int NtQueryTimerResolution(out uint min, out uint max, out uint cur);'; $type = Add-Type -MemberDefinition $code -Name 'Win32' -Namespace 'Timer' -PassThru; $min=$max=$cur=0; $type::NtQueryTimerResolution([ref]$min, [ref]$max, [ref]$cur); Write-Host \"Dabartinis tikslumas: $($cur/10000) ms\" -ForegroundColor Green; Write-Host \"Maksimalus galimas: $($max/10000) ms\" -ForegroundColor Cyan"
+powershell -NoProfile -File "%~dp0assets\latency_nitro_fix_inline_1.ps1"
 
 echo.
 echo ============================================
-echo    NITRO FIX PRITAIKYTAS! ⚡🚀
+echo    NITRO FIX PRITAIKYTAS!
 echo ============================================
 echo.
-echo PASTEBĖJIMAS: Pakeitimai pilnai isigalios tik 
+echo PASTEBĖJIMAS: Pakeitimai pilnai isigalios tik
 echo po kompiuterio perkrovimo.
 echo.
-echo Po perkrovimo tavo sistema naudos stabiliausia ir 
+echo Po perkrovimo tavo sistema naudos stabiliausia ir
 echo greiciausia imanoma laiko skaiciavimo metoda.
 echo.
 pause

@@ -2,6 +2,15 @@
 setlocal EnableDelayedExpansion
 title WiFi Diagnostikos ir Taisymo Irankis
 
+
+set "SCRIPT_BACKUP_TARGETS=network services"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    WiFi Diagnostika ir Taisymas
 echo ============================================
@@ -39,7 +48,7 @@ echo.
 :: Tikrinam ar yra wireless adapteris per PnP
 echo Ieskoma WiFi hardware (PnP devices)...
 set "PNP_FOUND=0"
-for /f "tokens=*" %%a in ('powershell -NoProfile -Command "Get-PnpDevice -Class Net -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' } | Select-Object -ExpandProperty FriendlyName" 2^>nul') do (
+for /f "tokens=*" %%a in ('powershell -NoProfile -File "%~dp0assets\wifi_fix_inline_1.ps1" 2^>nul') do (
     echo   [+] Rastas: %%a
     set "PNP_FOUND=1"
     set "HAS_WIFI_HW=1"
@@ -49,7 +58,7 @@ if "!PNP_FOUND!"=="0" (
     echo   [-] Wireless PnP irenginys NERASTAS.
     echo.
     echo   Tikrinam USB ir PCI busa del pasleptu WiFi adapteriu...
-    for /f "tokens=*" %%a in ('powershell -NoProfile -Command "Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' } | Select-Object Status,Class,FriendlyName | Format-Table -AutoSize | Out-String" 2^>nul') do (
+    for /f "tokens=*" %%a in ('powershell -NoProfile -File "%~dp0assets\wifi_fix_inline_2.ps1" 2^>nul') do (
         echo   %%a
     )
 ) else (
@@ -131,7 +140,7 @@ echo   -----------------------
 netsh interface show interface
 echo.
 
-for /f "tokens=*" %%a in ('powershell -NoProfile -Command "Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.InterfaceDescription -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' -or $_.Name -match 'Wi-Fi|WiFi|Wireless|WLAN' } | Format-Table Name,Status,InterfaceDescription -AutoSize | Out-String" 2^>nul') do (
+for /f "tokens=*" %%a in ('powershell -NoProfile -File "%~dp0assets\wifi_fix_inline_3.ps1" 2^>nul') do (
     set "ADAPTER_FOUND=1"
     echo   %%a
 )
@@ -268,7 +277,7 @@ echo.
 
 :: Fix 3: Ijungiam WiFi adapteri jei isjungtas
 echo [FIX 3/5] Ijungiamas WiFi adapteris (jei isjungtas^)...
-powershell -NoProfile -Command "Get-NetAdapter | Where-Object { ($_.InterfaceDescription -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' -or $_.Name -match 'Wi-Fi|WiFi|Wireless') -and $_.Status -ne 'Up' } | Enable-NetAdapter -Confirm:$false" 2>nul
+powershell -NoProfile -File "%~dp0assets\wifi_fix_inline_4.ps1" 2>nul
 if %errorLevel% equ 0 (
     echo   [OK] WiFi adapteris(-iai^) ijungtas.
     set /a FIXES_APPLIED+=1
@@ -282,11 +291,11 @@ echo [FIX 4/5] Tikrinam ir ijungiam Wireless Network feature...
 if "!WIRELESS_FEATURE_OFF!"=="1" (
     echo   Ijungiama WirelessNetworking feature per DISM...
     dism /online /enable-feature /featurename:WirelessNetworking /norestart 2>nul
-    if %errorLevel% equ 0 (
+    if errorlevel 1 (
+        echo   [-] Nepavyko ijungti WirelessNetworking feature.
+    ) else (
         echo   [OK] WirelessNetworking feature ijungta!
         set /a FIXES_APPLIED+=1
-    ) else (
-        echo   [-] Nepavyko ijungti WirelessNetworking feature.
     )
 ) else (
     echo   [i] Wireless feature jau ijungta arba neegzistuoja.
@@ -300,7 +309,7 @@ pnputil /scan-devices >nul 2>&1
 echo   [i] Irenginiu skenavimas baigtas.
 
 :: Bandome atnaujinti wireless device driverius
-powershell -NoProfile -Command "$devices = Get-PnpDevice -Class Net -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' -and $_.Status -ne 'OK' }; if ($devices) { foreach($d in $devices) { Write-Host '  Bandoma atnaujinti:' $d.FriendlyName; pnputil /enable-device $d.InstanceId 2>$null }; Write-Host '  [OK] Irenginiai ijungti.' } else { Write-Host '  [i] Visi WiFi irenginiai jau OK arba nerasti.' }" 2>nul
+powershell -NoProfile -File "%~dp0assets\wifi_fix_inline_5.ps1" 2>nul
 echo.
 
 echo ============================================

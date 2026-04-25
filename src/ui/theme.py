@@ -7,39 +7,39 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class Colors:
-    """Application color palette (dark theme)."""
+    """Application color palette (simple retro white theme)."""
 
-    bg_primary: str = "#1a1a1a"
-    bg_secondary: str = "#242424"
-    bg_tertiary: str = "#2f2f2f"
-    bg_hover: str = "#3a3a3a"
+    bg_primary: str = "#ffffff"
+    bg_secondary: str = "#f4f4f4"
+    bg_tertiary: str = "#e6e6e6"
+    bg_hover: str = "#dcdcdc"
 
-    text_primary: str = "#ffffff"
-    text_secondary: str = "#b3b3b3"
-    text_tertiary: str = "#6e6e6e"
+    text_primary: str = "#111111"
+    text_secondary: str = "#333333"
+    text_tertiary: str = "#666666"
 
-    accent: str = "#1f6aa5"
-    accent_hover: str = "#2b7fc0"
+    accent: str = "#000080"
+    accent_hover: str = "#000060"
 
-    success: str = "#2ea043"
-    warning: str = "#d29922"
-    error: str = "#f85149"
-    info: str = "#58a6ff"
+    success: str = "#008000"
+    warning: str = "#8a5a00"
+    error: str = "#a00000"
+    info: str = "#000080"
 
-    border: str = "#3a3a3a"
+    border: str = "#a0a0a0"
 
 
 @dataclass(frozen=True)
 class Fonts:
     """Font configuration."""
 
-    family: str = "Segoe UI"
-    family_mono: str = "Cascadia Mono"
+    family: str = "Tahoma"
+    family_mono: str = "Consolas"
 
     size_small: int = 11
-    size_normal: int = 13
-    size_large: int = 15
-    size_title: int = 22
+    size_normal: int = 12
+    size_large: int = 14
+    size_title: int = 18
 
 
 class Theme:

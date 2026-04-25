@@ -1,6 +1,16 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Mouse Acceleration Killer - 1:1 Precision
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Mouse Acceleration Killer
@@ -38,10 +48,10 @@ echo [OK] Duomenu eiles dydis optimizuotas (mazesnis lagas).
 
 echo.
 echo ============================================
-echo    PELĖS OPTIMIZAVIMAS BAIGTAS! 🎯⚡
+echo    PELĖS OPTIMIZAVIMAS BAIGTAS!
 echo ============================================
 echo.
-echo Pakeitimai isigalios po kompiuterio perkrovimo arba 
+echo Pakeitimai isigalios po kompiuterio perkrovimo arba
 echo po to, kai perkrausite Explorer.
 echo.
 echo Rekomendacija: Patikrinkite, ar zaidimuose "Raw Input" yra IJUNGTAS.

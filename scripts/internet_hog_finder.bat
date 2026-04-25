@@ -22,7 +22,7 @@ echo ----------------------------------------------------------------------
 echo Program Name              PID        Remote Address       Port
 echo ----------------------------------------------------------------------
 
-powershell -Command "Get-NetTCPConnection -State Established | ForEach-Object { $proc = Get-Process -Id $_.OwningProcess -ErrorAction SilentlyContinue; if ($proc) { $name = $proc.Name.PadRight(25).Substring(0,25); $idStr = $_.OwningProcess.ToString().PadRight(10); $remote = $_.RemoteAddress.ToString().PadRight(20); $port = $_.RemotePort.ToString(); Write-Host (\"$name $idStr $remote $port\") -ForegroundColor Cyan } }"
+powershell -File "%~dp0assets\internet_hog_finder_inline_1.ps1"
 
 echo ----------------------------------------------------------------------
 echo.

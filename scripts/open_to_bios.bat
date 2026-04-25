@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Open To Bios
 echo ================================================
 echo Opening BIOS/UEFI Settings
 echo ================================================

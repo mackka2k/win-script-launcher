@@ -1,0 +1,1 @@
+$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut("$env:USERPROFILE\Desktop\Tor Browser.lnk"); $Shortcut.TargetPath = "$env:TOR_DIR\LaunchTor.bat"; $Shortcut.IconLocation = "$env:BROWSER_DIR\Browser\firefox.exe,0"; $Shortcut.Save()

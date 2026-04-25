@@ -1,0 +1,1 @@
+Get-NetTCPConnection | Where-Object { $_.State -eq 'Established' -and $_.RemotePort -notmatch '^80$|^443$|^53$' } | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess | Format-Table

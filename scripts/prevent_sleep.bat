@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Prevent Sleep
 echo ============================================
 echo    Prevent Sleep Mode
 echo ============================================

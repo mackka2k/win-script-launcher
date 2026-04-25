@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Keylogger ^& Spyware Detector
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Keylogger ^& Spyware Detector
@@ -19,7 +20,7 @@ if %errorLevel% neq 0 (
 )
 
 echo [1/3] Tikrinami aktyvūs tinklo ryšiai (itartini portai)...
-powershell -Command "Get-NetTCPConnection | Where-Object { $_.State -eq 'Established' -and $_.RemotePort -notmatch '^80$|^443$|^53$' } | Select-Object LocalAddress, LocalPort, RemoteAddress, RemotePort, OwningProcess | Format-Table"
+powershell -File "%~dp0assets\keylogger_detector_inline_1.ps1"
 
 echo.
 echo [2/3] Ieskoma procesu be gamintojo (unidentified)...
@@ -39,14 +40,14 @@ for %%s in (%suspicious%) do (
 )
 
 if "%found%"=="0" (
-    echo [✓] Zinomu paprastu keyloggeriu nerasta.
+    echo [OK] Zinomu paprastu keyloggeriu nerasta.
 )
 
 echo.
 echo ============================================
-echo    Patikra baigta. 🕵️
+echo    Patikra baigta. 🕵
 echo ============================================
-echo Pastaba: Sis skriptas yra bazine apsauga. 
+echo Pastaba: Sis skriptas yra bazine apsauga.
 echo Rezultatus turi ivertinti pats.
 echo.
 pause

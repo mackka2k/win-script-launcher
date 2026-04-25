@@ -2,6 +2,15 @@
 setlocal
 title Windows Bloatware Remover
 
+
+set "SCRIPT_BACKUP_TARGETS=appx"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    Windows Bloatware Remover
 echo ============================================
@@ -29,11 +38,11 @@ if /i not "%proceed%"=="Y" (
 )
 
 echo.
-echo 🚀 Isinstaliuojamos siuksles...
+echo  Isinstaliuojamos siuksles...
 echo.
 
 :: List of common Windows bloatware IDs
-powershell -Command "$apps = @('Microsoft.MicrosoftSolitaireCollection', 'Microsoft.BingNews', 'Microsoft.BingWeather', 'Microsoft.BingSports', 'Microsoft.BingFinance', 'Microsoft.WindowsFeedbackHub', 'Microsoft.GetHelp', 'Microsoft.Getstarted', 'Microsoft.MicrosoftOfficeHub', 'Microsoft.People', 'Microsoft.SkypeApp', 'Microsoft.WindowsMaps', 'Microsoft.3DViewer', 'Microsoft.MixedReality.Portal', 'Microsoft.OneConnect', 'Microsoft.Office.OneNote'); foreach ($app in $apps) { Write-Host \"Salinama: $app...\" -NoNewline; $p = Get-AppxPackage $app; if ($p) { try { $p | Remove-AppxPackage -ErrorAction Stop; Write-Host ' [OK]' -ForegroundColor Green } catch { Write-Host ' [KLAIDA]' -ForegroundColor Red } } else { Write-Host ' [NERASTA]' -ForegroundColor Gray } }"
+powershell -File "%~dp0assets\windows_bloat_remover_inline_1.ps1"
 
 echo.
 echo ============================================

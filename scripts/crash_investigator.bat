@@ -1,9 +1,10 @@
 @echo off
 setlocal
 title System Crash Reporter
+chcp 65001 >nul 2>&1
 
 echo ============================================
-echo      System Crash Reporter 🕵️‍♂️📄
+echo      System Crash Reporter 🕵‍♂📄
 echo ============================================
 echo.
 echo Generuojama pilna sistemos klaidu ataskaita...
@@ -20,17 +21,17 @@ echo. >> "%REPORT_FILE%"
 
 :: 1. Critical Power Errors
 echo [1] KRITINIAI ISSIJUNGIMAI (Kernel-Power): >> "%REPORT_FILE%"
-powershell -Command "Get-WinEvent -FilterHashtable @{LogName='System'; Id=41} -MaxEvents 10 -ErrorAction SilentlyContinue | Select-Object TimeCreated, Message | Format-List" >> "%REPORT_FILE%"
+powershell -File "%~dp0assets\crash_investigator_inline_1.ps1" >> "%REPORT_FILE%"
 echo. >> "%REPORT_FILE%"
 
 :: 2. Application Crashing
 echo [2] PROGRAMU KLAIDOS (Application Crashes): >> "%REPORT_FILE%"
-powershell -Command "Get-WinEvent -FilterHashtable @{LogName='Application'; Level=2} -MaxEvents 10 -ErrorAction SilentlyContinue | Select-Object TimeCreated, Message | Format-List" >> "%REPORT_FILE%"
+powershell -File "%~dp0assets\crash_investigator_inline_2.ps1" >> "%REPORT_FILE%"
 echo. >> "%REPORT_FILE%"
 
 :: 3. Blue Screen (BSOD) Info
 echo [3] MELYNOJO EKRANO (BSOD) DUOMENYS: >> "%REPORT_FILE%"
-powershell -Command "Get-WinEvent -FilterHashtable @{LogName='System'; Id=1001; ProviderName='Microsoft-Windows-WER-SystemErrorReporting'} -MaxEvents 5 -ErrorAction SilentlyContinue | Select-Object TimeCreated, Message | Format-List" >> "%REPORT_FILE%"
+powershell -File "%~dp0assets\crash_investigator_inline_3.ps1" >> "%REPORT_FILE%"
 echo. >> "%REPORT_FILE%"
 
 :: 4. Dump files list

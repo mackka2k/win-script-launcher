@@ -21,7 +21,7 @@ echo Setting wallpaper...
 echo.
 
 :: Use PowerShell to set the wallpaper and refresh the system
-powershell -Command "$code = 'using System; using System.Runtime.InteropServices; public class Wallpaper { [DllImport(\"user32.dll\", CharSet=CharSet.Auto)] public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni); }'; Add-Type -TypeDefinition $code; [Wallpaper]::SystemParametersInfo(20, 0, '%WALLPAPER_PATH%', 3) | Out-Null"
+powershell -File "%~dp0assets\set_dark_wallpaper_inline_1.ps1"
 
 if %errorlevel% equ 0 (
     echo.

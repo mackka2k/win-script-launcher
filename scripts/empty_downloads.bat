@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Empty Downloads
 echo ============================================
 echo    Downloads Folder Cleaner
 echo ============================================
@@ -12,7 +14,7 @@ echo Analyzing Downloads folder...
 echo.
 
 :: Count files and calculate size
-powershell -Command "& { $path = '%downloads%'; $files = Get-ChildItem -Path $path -Recurse -File -ErrorAction SilentlyContinue; $folders = Get-ChildItem -Path $path -Recurse -Directory -ErrorAction SilentlyContinue; $totalSize = ($files | Measure-Object -Property Length -Sum).Sum; $sizeMB = [math]::Round($totalSize / 1MB, 2); $sizeGB = [math]::Round($totalSize / 1GB, 2); Write-Host 'Location: ' -NoNewline; Write-Host $path -ForegroundColor Cyan; Write-Host 'Files: ' -NoNewline; Write-Host ($files.Count) -ForegroundColor Yellow; Write-Host 'Folders: ' -NoNewline; Write-Host ($folders.Count) -ForegroundColor Yellow; if ($sizeGB -gt 1) { Write-Host 'Total Size: ' -NoNewline; Write-Host $sizeGB -ForegroundColor Red -NoNewline; Write-Host ' GB' } else { Write-Host 'Total Size: ' -NoNewline; Write-Host $sizeMB -ForegroundColor Yellow -NoNewline; Write-Host ' MB' } }"
+powershell -File "%~dp0assets\empty_downloads_inline_1.ps1"
 
 echo.
 echo ============================================
@@ -53,13 +55,13 @@ goto end
 :delete30
 echo.
 echo Deleting files older than 30 days...
-powershell -Command "& { $path = '%downloads%'; $days = 30; $cutoff = (Get-Date).AddDays(-$days); $files = Get-ChildItem -Path $path -Recurse -File | Where-Object { $_.LastWriteTime -lt $cutoff }; $count = if ($files) { $files.Count } else { 0 }; $files | Remove-Item -Force -ErrorAction SilentlyContinue; Write-Host ''; Write-Host 'Deleted ' -NoNewline; Write-Host $count -ForegroundColor Green -NoNewline; Write-Host ' files older than ' -NoNewline; Write-Host $days -NoNewline; Write-Host ' days.' }"
+powershell -File "%~dp0assets\empty_downloads_inline_2.ps1"
 goto end
 
 :delete90
 echo.
 echo Deleting files older than 90 days...
-powershell -Command "& { $path = '%downloads%'; $days = 90; $cutoff = (Get-Date).AddDays(-$days); $files = Get-ChildItem -Path $path -Recurse -File | Where-Object { $_.LastWriteTime -lt $cutoff }; $count = if ($files) { $files.Count } else { 0 }; $files | Remove-Item -Force -ErrorAction SilentlyContinue; Write-Host ''; Write-Host 'Deleted ' -NoNewline; Write-Host $count -ForegroundColor Green -NoNewline; Write-Host ' files older than ' -NoNewline; Write-Host $days -NoNewline; Write-Host ' days.' }"
+powershell -File "%~dp0assets\empty_downloads_inline_3.ps1"
 goto end
 
 :open

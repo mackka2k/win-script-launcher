@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Internet Stability Monitor PRO 🌐📊
+title Internet Stability Monitor PRO
 
 echo ============================================
 echo    Internet Stability Monitor PRO

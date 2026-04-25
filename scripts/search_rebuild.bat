@@ -1,4 +1,15 @@
 @echo off
+setlocal EnableExtensions
+title Search Rebuild
+
+set "SCRIPT_BACKUP_TARGETS=registry files"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    Windows Search Rebuild
 echo ============================================
@@ -49,7 +60,7 @@ echo Done.
 
 :: Trigger index rebuild
 echo [5/5] Triggering index rebuild...
-powershell -Command "Get-ChildItem -Path HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\VolumeCaches | ForEach-Object {New-ItemProperty -Path $_.PSPath -Name StateFlags0001 -Value 2 -PropertyType DWord -Force -ErrorAction SilentlyContinue}" >nul 2>&1
+powershell -File "%~dp0assets\search_rebuild_inline_1.ps1" >nul 2>&1
 echo Done.
 
 echo.
@@ -60,15 +71,15 @@ echo.
 echo The Windows Search index is being rebuilt.
 echo.
 echo Changes applied:
-echo [✓] Search service restarted
-echo [✓] Old index deleted
-echo [✓] Search settings reset
-echo [✓] Index rebuild triggered
+echo [OK] Search service restarted
+echo [OK] Old index deleted
+echo [OK] Search settings reset
+echo [OK] Index rebuild triggered
 echo.
 echo The rebuild will continue in the background.
 echo This may take 15-30 minutes depending on your files.
 echo.
 echo Search functionality will improve as indexing progresses.
-echo You can check indexing status in: Settings > Search > Searching Windows
+echo You can check indexing status in: Settings ^> Search ^> Searching Windows
 echo.
 pause

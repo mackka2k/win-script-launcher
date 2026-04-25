@@ -14,11 +14,14 @@ Contract:
 
 from __future__ import annotations
 
+import codecs
+import os
 import subprocess
 import threading
 import time
 from collections.abc import Callable
 from datetime import datetime
+from pathlib import Path
 
 from loguru import logger
 
@@ -38,15 +41,19 @@ CompletionCallback = Callable[[ScriptExecution], None]
 class ScriptExecutor:
     """Executes scripts and manages their lifecycle."""
 
+    _STREAM_READ_SIZE = 4096
+
     def __init__(
         self,
         timeout_seconds: int = 300,
         max_output_lines: int = 10_000,
         run_batch_in_new_window: bool = False,
+        log_dir: Path | None = None,
     ) -> None:
         self.timeout_seconds = timeout_seconds
         self.max_output_lines = max_output_lines
         self.run_batch_in_new_window = run_batch_in_new_window
+        self.log_dir = log_dir or Path("logs") / "scripts"
 
         self._active: dict[str, ScriptExecution] = {}
         self._processes: dict[str, subprocess.Popen[str]] = {}
@@ -153,6 +160,33 @@ class ScriptExecutor:
         with self._lock:
             return list(self._active.values())
 
+    def send_input(self, script: Script, text: str) -> bool:
+        """Send one line of input to a running captured script."""
+        execution_id = self._key(script)
+        with self._lock:
+            execution = self._active.get(execution_id)
+            process = self._processes.get(execution_id)
+
+        if execution is None or process is None or process.stdin is None:
+            logger.debug(f"No input stream available for: {script.name}")
+            return False
+        if process.poll() is not None:
+            logger.debug(f"Cannot send input to completed script: {script.name}")
+            return False
+
+        line = text if text.endswith("\n") else f"{text}\n"
+        try:
+            process.stdin.write(line)
+            process.stdin.flush()
+        except (BrokenPipeError, OSError, ValueError) as e:
+            logger.warning(f"Failed to send input to {script.name}: {e}")
+            return False
+
+        # Do not log the actual value; interactive input can contain secrets.
+        self._write_log(execution, "INPUT sent\n")
+        logger.debug(f"Input sent to: {script.name}")
+        return True
+
     # --- Internal ------------------------------------------------------
 
     @staticmethod
@@ -171,12 +205,14 @@ class ScriptExecutor:
         try:
             execution.status = ExecutionStatus.RUNNING
             execution.start_time = datetime.now()
+            execution.log_path = self._create_log_path(script, execution.start_time)
+            self._open_log(execution)
+            self._write_log(execution, f"START {script.name}\n")
+            self._write_log(execution, f"Path: {script.path}\n")
+            self._write_log(execution, f"Risk: {script.risk_level.label}\n")
             logger.info(f"Starting execution: {script.name}")
 
-            if (
-                script.script_type == ScriptType.BATCH
-                and self.run_batch_in_new_window
-            ):
+            if script.script_type == ScriptType.BATCH and self.run_batch_in_new_window:
                 self._run_detached(execution, output_callback)
                 return
 
@@ -186,9 +222,17 @@ class ScriptExecutor:
             logger.exception(f"Error executing {script.name}")
             execution.status = ExecutionStatus.FAILED
             execution.error_message = str(e)
+            self._write_log(execution, f"ERROR {e}\n")
 
         finally:
             execution.end_time = datetime.now()
+            self._write_log(
+                execution,
+                f"END {execution.status.value} "
+                f"return_code={execution.return_code} "
+                f"error={execution.error_message or ''}\n",
+            )
+            self._close_log(execution)
             with self._lock:
                 self._processes.pop(execution_id, None)
                 self._active.pop(execution_id, None)
@@ -218,6 +262,8 @@ class ScriptExecutor:
             output_callback(msg2)
         execution.status = ExecutionStatus.SUCCESS
         execution.return_code = 0
+        self._write_log(execution, msg1)
+        self._write_log(execution, msg2)
         logger.info(f"Launched detached: {script.name}")
 
     def _run_captured(
@@ -254,9 +300,7 @@ class ScriptExecutor:
             logger.warning(f"Script timed out: {script.name}")
             terminate_process(process)
             execution.status = ExecutionStatus.TIMEOUT
-            execution.error_message = (
-                f"Execution timed out after {self.timeout_seconds}s"
-            )
+            execution.error_message = f"Execution timed out after {self.timeout_seconds}s"
             stdout_thread.join(timeout=1.0)
             stderr_thread.join(timeout=1.0)
             return
@@ -275,9 +319,7 @@ class ScriptExecutor:
         else:
             execution.status = ExecutionStatus.FAILED
             execution.error_message = f"Exited with code {return_code}"
-            logger.warning(
-                f"Script failed with code {return_code}: {script.name}"
-            )
+            logger.warning(f"Script failed with code {return_code}: {script.name}")
 
     @staticmethod
     def _pump_stream(
@@ -289,11 +331,32 @@ class ScriptExecutor:
         if stream is None:
             return
         try:
-            for line in iter(stream.readline, ""):  # type: ignore[union-attr]
-                if not line:
+            decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
+            prefix_next_chunk = bool(prefix)
+            while True:
+                data = os.read(
+                    stream.buffer.raw.fileno(),  # type: ignore[union-attr]
+                    ScriptExecutor._STREAM_READ_SIZE,
+                )
+                if not data:
                     break
-                chunk = f"{prefix}{line}"
-                execution.add_output(chunk)
+                text = decoder.decode(data)
+                if not text:
+                    continue
+                chunk = f"{prefix}{text}" if prefix_next_chunk else text
+                prefix_next_chunk = bool(prefix) and text.endswith(("\r", "\n"))
+                execution.add_output_chunk(chunk)
+                ScriptExecutor._write_log(execution, chunk)
+                if output_callback is not None:
+                    try:
+                        output_callback(chunk)
+                    except Exception:  # noqa: BLE001
+                        logger.exception("Output callback raised")
+            remaining = decoder.decode(b"", final=True)
+            if remaining:
+                chunk = f"{prefix}{remaining}" if prefix_next_chunk else remaining
+                execution.add_output_chunk(chunk)
+                ScriptExecutor._write_log(execution, chunk)
                 if output_callback is not None:
                     try:
                         output_callback(chunk)
@@ -301,3 +364,44 @@ class ScriptExecutor:
                         logger.exception("Output callback raised")
         except (OSError, ValueError) as e:
             logger.debug(f"Stream closed: {e}")
+
+    def _create_log_path(self, script: Script, started_at: datetime) -> Path:
+        safe_name = "".join(
+            ch if ch.isalnum() or ch in ("-", "_", ".") else "_" for ch in script.name
+        )
+        timestamp = started_at.strftime("%Y%m%d_%H%M%S_%f")
+        path = self.log_dir / safe_name / f"{timestamp}.log"
+        path.parent.mkdir(parents=True, exist_ok=True)
+        return path
+
+    @staticmethod
+    def _write_log(execution: ScriptExecution, text: str) -> None:
+        if execution.log_path is None:
+            return
+        with execution._log_lock:
+            if execution._log_file is not None:
+                execution._log_file.write(text)
+                return
+            with open(execution.log_path, "a", encoding="utf-8", errors="replace") as f:
+                f.write(text)
+
+    @staticmethod
+    def _open_log(execution: ScriptExecution) -> None:
+        if execution.log_path is None:
+            return
+        with execution._log_lock:
+            execution._log_file = open(  # noqa: SIM115 - kept open for run duration
+                execution.log_path,
+                "a",
+                encoding="utf-8",
+                errors="replace",
+            )
+
+    @staticmethod
+    def _close_log(execution: ScriptExecution) -> None:
+        with execution._log_lock:
+            if execution._log_file is None:
+                return
+            execution._log_file.flush()
+            execution._log_file.close()
+            execution._log_file = None

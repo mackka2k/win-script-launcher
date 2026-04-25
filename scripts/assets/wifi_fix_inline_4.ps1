@@ -1,0 +1,1 @@
+Get-NetAdapter | Where-Object { ($_.InterfaceDescription -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' -or $_.Name -match 'Wi-Fi|WiFi|Wireless') -and $_.Status -ne 'Up' } | Enable-NetAdapter -Confirm:$false

@@ -1,4 +1,15 @@
 @echo off
+setlocal EnableExtensions
+title Store Reset
+
+set "SCRIPT_BACKUP_TARGETS=appx"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    Windows Store Reset
 echo ============================================
@@ -38,9 +49,9 @@ echo.
 echo The Microsoft Store has been reset.
 echo.
 echo Changes applied:
-echo [✓] Store cache cleared
-echo [✓] Store app reset
-echo [✓] Store re-registered
+echo [OK] Store cache cleared
+echo [OK] Store app reset
+echo [OK] Store re-registered
 echo.
 echo The Store should now work properly!
 echo Try downloading apps again.

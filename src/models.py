@@ -8,6 +8,7 @@ from datetime import datetime
 from enum import Enum
 from pathlib import Path
 from threading import Lock
+from typing import TextIO
 
 
 class ScriptType(Enum):
@@ -42,6 +43,38 @@ class ExecutionStatus(Enum):
     CANCELLED = "cancelled"
 
 
+class RiskLevel(Enum):
+    """User-facing risk level for a script."""
+
+    SAFE = "safe"
+    MODERATE = "moderate"
+    DESTRUCTIVE = "destructive"
+
+    @classmethod
+    def from_value(cls, value: str | RiskLevel | None) -> RiskLevel:
+        """Parse risk values from metadata, defaulting conservatively."""
+        if isinstance(value, cls):
+            return value
+        normalized = (value or cls.MODERATE.value).strip().lower()
+        return {
+            "safe": cls.SAFE,
+            "low": cls.SAFE,
+            "moderate": cls.MODERATE,
+            "medium": cls.MODERATE,
+            "destructive": cls.DESTRUCTIVE,
+            "dangerous": cls.DESTRUCTIVE,
+            "high": cls.DESTRUCTIVE,
+        }.get(normalized, cls.MODERATE)
+
+    @property
+    def label(self) -> str:
+        return {
+            RiskLevel.SAFE: "Safe",
+            RiskLevel.MODERATE: "Moderate",
+            RiskLevel.DESTRUCTIVE: "Destructive",
+        }[self]
+
+
 @dataclass
 class Script:
     """Represents a script file."""
@@ -51,6 +84,12 @@ class Script:
     script_type: ScriptType
     description: str = ""
     category: str = "General"
+    risk_level: RiskLevel = RiskLevel.MODERATE
+    requires_admin: bool = False
+    requires_reboot: bool = False
+    expected_changes: list[str] = field(default_factory=list)
+    backup_targets: list[str] = field(default_factory=list)
+    preview_command: str | None = None
     last_run: datetime | None = None
     run_count: int = 0
 
@@ -94,14 +133,18 @@ class ScriptExecution:
     end_time: datetime | None = None
     return_code: int | None = None
     error_message: str | None = None
+    log_path: Path | None = None
     max_output_lines: int = DEFAULT_MAX_OUTPUT_LINES
     cancel_requested: bool = False
     _output: deque[str] = field(init=False, repr=False)
     _output_lock: Lock = field(init=False, repr=False, compare=False)
+    _log_lock: Lock = field(init=False, repr=False, compare=False)
+    _log_file: TextIO | None = field(default=None, init=False, repr=False, compare=False)
 
     def __post_init__(self) -> None:
         self._output = deque(maxlen=self.max_output_lines)
         self._output_lock = Lock()
+        self._log_lock = Lock()
 
     @property
     def output(self) -> list[str]:
@@ -120,6 +163,14 @@ class ScriptExecution:
         """Add a line of output (thread-safe, bounded)."""
         with self._output_lock:
             self._output.append(line)
+
+    def add_output_chunk(self, text: str) -> None:
+        """Add output text, preserving bounded storage at line-like granularity."""
+        if not text:
+            return
+        parts = text.splitlines(keepends=True) or [text]
+        with self._output_lock:
+            self._output.extend(parts)
 
     @property
     def full_output(self) -> str:

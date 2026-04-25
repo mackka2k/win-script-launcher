@@ -1,9 +1,18 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Windows Update Fixer 🛠️🔄
+title Windows Update Fixer
+
+
+set "SCRIPT_BACKUP_TARGETS=files"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo    Windows Update Fixer 🛠️🔄
+echo    Windows Update Fixer
 echo ============================================
 echo.
 echo Sis skriptas sutvarkys Windows Update klaidas:
@@ -32,13 +41,13 @@ echo [2/3] Valomos atnaujinimu talpyklos (SoftwareDistribution)...
 :: Pervadiname aplankus, kad Windows sukurtu naujus
 if exist "%windir%\SoftwareDistribution" (
     ren "%windir%\SoftwareDistribution" SoftwareDistribution.old >nul 2>&1
-    if %errorlevel% neq 0 (
+    if errorlevel 1 (
         rmdir /s /q "%windir%\SoftwareDistribution" >nul 2>&1
     )
 )
 if exist "%windir%\System32\catroot2" (
     ren "%windir%\System32\catroot2" catroot2.old >nul 2>&1
-    if %errorlevel% neq 0 (
+    if errorlevel 1 (
         rmdir /s /q "%windir%\System32\catroot2" >nul 2>&1
     )
 )
@@ -53,7 +62,7 @@ echo [OK] Sistemos darbas atstatytas.
 
 echo.
 echo ============================================
-echo    SUTVARKYTA! ✨
+echo    SUTVARKYTA!
 echo ============================================
 echo Patikrinkite Windows Update nustatymus dabar.
 echo.

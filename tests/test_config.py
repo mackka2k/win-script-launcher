@@ -14,7 +14,7 @@ from src.exceptions import ConfigurationError, ValidationError
 class TestAppConfig:
     def test_defaults_are_valid(self) -> None:
         cfg = AppConfig()
-        assert cfg.theme.mode == "dark"
+        assert cfg.theme.mode == "light"
         assert cfg.window.width >= 400
         assert cfg.execution.timeout_seconds >= 1
 

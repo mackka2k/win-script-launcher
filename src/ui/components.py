@@ -6,7 +6,7 @@ from collections.abc import Callable
 
 import customtkinter as ctk
 
-from ..models import Script, ScriptType
+from ..models import RiskLevel, Script, ScriptType
 from .theme import Theme
 
 
@@ -20,13 +20,16 @@ class ModernButton(ctk.CTkButton):
         command: Callable[[], None] | None = None,
         **kwargs: object,
     ) -> None:
+        kwargs.setdefault("text_color", Theme.colors.text_primary)
         super().__init__(
             parent,
             text=text,
             command=command,
             font=(Theme.fonts.family, Theme.fonts.size_normal),
             height=34,
-            corner_radius=6,
+            corner_radius=0,
+            border_width=1,
+            border_color=Theme.colors.border,
             **kwargs,
         )
 
@@ -34,18 +37,22 @@ class ModernButton(ctk.CTkButton):
 class ScriptCard(ctk.CTkFrame):
     """A compact row that shows a script and its run/cancel controls."""
 
+    _DESC_WRAP_DEBOUNCE_MS = 120
+    _DESC_MIN_WRAP = 120
+
     def __init__(
         self,
         parent: ctk.CTkBaseClass,
         script: Script,
         on_run: Callable[[Script], None],
         on_cancel: Callable[[Script], None] | None = None,
+        on_select: Callable[[Script], None] | None = None,
         **kwargs: object,
     ) -> None:
         super().__init__(
             parent,
             fg_color=Theme.colors.bg_secondary,
-            corner_radius=8,
+            corner_radius=0,
             border_width=1,
             border_color=Theme.colors.border,
             **kwargs,
@@ -53,8 +60,13 @@ class ScriptCard(ctk.CTkFrame):
         self.script = script
         self._on_run = on_run
         self._on_cancel = on_cancel
+        self._on_select = on_select
+        self._wrap_after_id: str | None = None
 
+        self.grid_columnconfigure(0, weight=0)
         self.grid_columnconfigure(1, weight=1)
+        self.grid_columnconfigure(2, weight=0)
+        self.grid_rowconfigure(1, weight=1)
 
         self._icon = ctk.CTkLabel(
             self,
@@ -63,7 +75,7 @@ class ScriptCard(ctk.CTkFrame):
             text_color=Theme.colors.accent,
             width=36,
         )
-        self._icon.grid(row=0, column=0, padx=(12, 6), pady=10)
+        self._icon.grid(row=0, column=0, padx=(10, 6), pady=(8, 2), sticky="nw")
 
         self._name = ctk.CTkLabel(
             self,
@@ -72,31 +84,45 @@ class ScriptCard(ctk.CTkFrame):
             text_color=Theme.colors.text_primary,
             anchor="w",
         )
-        self._name.grid(row=0, column=1, sticky="w", padx=4)
+        self._name.grid(row=0, column=1, sticky="ew", padx=4, pady=(8, 2))
 
         if script.description:
             self._desc = ctk.CTkLabel(
                 self,
                 text=script.description,
-                font=(Theme.fonts.family, Theme.fonts.size_small),
-                text_color=Theme.colors.text_secondary,
+                font=(Theme.fonts.family, Theme.fonts.size_normal),
+                text_color=Theme.colors.text_primary,
                 anchor="w",
                 justify="left",
+                wraplength=900,
             )
-            self._desc.grid(row=1, column=1, sticky="w", padx=4, pady=(0, 6))
+            self._desc.grid(
+                row=1,
+                column=0,
+                columnspan=3,
+                sticky="ew",
+                padx=10,
+                pady=(4, 8),
+            )
 
-        if script.category and script.category != "General":
-            self._category = ctk.CTkLabel(
-                self,
-                text=script.category,
-                font=(Theme.fonts.family, Theme.fonts.size_small),
-                fg_color=Theme.colors.bg_tertiary,
-                text_color=Theme.colors.text_secondary,
-                corner_radius=4,
-                padx=8,
-                pady=2,
-            )
-            self._category.grid(row=0, column=2, padx=8)
+        self._meta_badge = ctk.CTkLabel(
+            self,
+            text=self._metadata_text(script),
+            font=(Theme.fonts.family, Theme.fonts.size_small),
+            fg_color=self._risk_color(script.risk_level),
+            text_color="#ffffff",
+            corner_radius=0,
+            padx=8,
+            pady=2,
+        )
+        self._meta_badge.grid(
+            row=2,
+            column=0,
+            columnspan=2,
+            padx=10,
+            pady=(0, 8),
+            sticky="w",
+        )
 
         self._run_btn = ctk.CTkButton(
             self,
@@ -107,8 +133,79 @@ class ScriptCard(ctk.CTkFrame):
             font=(Theme.fonts.family, Theme.fonts.size_small, "bold"),
             fg_color=Theme.colors.accent,
             hover_color=Theme.colors.accent_hover,
+            text_color="#ffffff",
+            corner_radius=0,
+            border_width=1,
+            border_color=Theme.colors.border,
         )
-        self._run_btn.grid(row=0, column=3, padx=(6, 12))
+        self._run_btn.grid(row=2, column=2, padx=(6, 10), pady=(0, 8), sticky="e")
+        if hasattr(self, "_desc"):
+            self.bind("<Configure>", self._schedule_description_wrap)
+        self._bind_select_handlers()
+
+    def _bind_select_handlers(self) -> None:
+        if self._on_select is None:
+            return
+        for widget in (self, self._icon, self._name, self._meta_badge):
+            widget.bind("<Button-1>", self._select_clicked)
+        if hasattr(self, "_desc"):
+            self._desc.bind("<Button-1>", self._select_clicked)
+
+    def _select_clicked(self, _event: object) -> None:
+        if self._on_select is not None:
+            self._on_select(self.script)
+
+    def update_script(self, script: Script) -> None:
+        """Refresh row content while reusing the existing widget tree."""
+        self.script = script
+        self._icon.configure(text=self._icon_for(script.script_type))
+        self._name.configure(text=script.name)
+        self._meta_badge.configure(
+            text=self._metadata_text(script),
+            fg_color=self._risk_color(script.risk_level),
+        )
+        if hasattr(self, "_desc"):
+            self._desc.configure(text=script.description)
+
+    def _schedule_description_wrap(self, event: object) -> None:
+        width = getattr(event, "width", self.winfo_width())
+        if width <= 0 or width == getattr(self, "_last_wrap_width", None):
+            return
+        self._last_wrap_width = width
+        if self._wrap_after_id is not None:
+            self.after_cancel(self._wrap_after_id)
+        self._wrap_after_id = self.after(
+            self._DESC_WRAP_DEBOUNCE_MS,
+            lambda: self._update_description_wrap(width),
+        )
+
+    def _update_description_wrap(self, card_width: int) -> None:
+        self._wrap_after_id = None
+        if not hasattr(self, "_desc"):
+            return
+        wraplength = max(self._DESC_MIN_WRAP, card_width - 24)
+        self._desc.configure(wraplength=wraplength)
+
+    @staticmethod
+    def _metadata_text(script: Script) -> str:
+        parts = []
+        category = script.category.replace("⚙", "").strip()
+        if category and category != "General":
+            parts.append(category)
+        parts.append(script.risk_level.label)
+        if script.requires_admin:
+            parts.append("Admin")
+        if script.requires_reboot:
+            parts.append("Reboot")
+        return " | ".join(parts)
+
+    @staticmethod
+    def _risk_color(risk_level: RiskLevel) -> str:
+        return {
+            RiskLevel.SAFE: Theme.colors.success,
+            RiskLevel.MODERATE: Theme.colors.warning,
+            RiskLevel.DESTRUCTIVE: Theme.colors.error,
+        }[risk_level]
 
     def _run_clicked(self) -> None:
         self._on_run(self.script)
@@ -121,6 +218,7 @@ class ScriptCard(ctk.CTkFrame):
                 command=self._cancel_clicked,
                 fg_color=Theme.colors.error,
                 hover_color="#c0392b",
+                text_color="#ffffff",
             )
         else:
             self._run_btn.configure(
@@ -128,6 +226,7 @@ class ScriptCard(ctk.CTkFrame):
                 command=self._run_clicked,
                 fg_color=Theme.colors.accent,
                 hover_color=Theme.colors.accent_hover,
+                text_color="#ffffff",
             )
 
     def _cancel_clicked(self) -> None:
@@ -155,6 +254,7 @@ class OutputConsole(ctk.CTkTextbox):
             fg_color=Theme.colors.bg_primary,
             border_width=1,
             border_color=Theme.colors.border,
+            corner_radius=0,
             activate_scrollbars=True,
             **kwargs,
         )
@@ -166,11 +266,17 @@ class OutputConsole(ctk.CTkTextbox):
         self._textbox.tag_config("muted", foreground=Theme.colors.text_tertiary)
 
     def append(self, text: str, tag: str | None = None) -> None:
+        self.append_many([(text, tag)])
+
+    def append_many(self, chunks: list[tuple[str, str | None]]) -> None:
+        if not chunks:
+            return
         self.configure(state="normal")
-        if tag:
-            self.insert("end", text, tag)
-        else:
-            self.insert("end", text)
+        for text, tag in chunks:
+            if tag:
+                self.insert("end", text, tag)
+            else:
+                self.insert("end", text)
         self.see("end")
         self.configure(state="disabled")
 
@@ -199,6 +305,7 @@ class SearchBar(ctk.CTkEntry):
             fg_color=Theme.colors.bg_secondary,
             border_width=1,
             border_color=Theme.colors.border,
+            corner_radius=0,
             **kwargs,
         )
         self._on_search = on_search
@@ -246,9 +353,7 @@ class StatusBar(ctk.CTkFrame):
         self._right.pack(side="right", padx=12)
 
     def set_status(self, text: str, color: str | None = None) -> None:
-        self._label.configure(
-            text=text, text_color=color or Theme.colors.text_secondary
-        )
+        self._label.configure(text=text, text_color=color or Theme.colors.text_secondary)
 
     def set_right(self, text: str) -> None:
         self._right.configure(text=text)

@@ -29,12 +29,12 @@ set /p "ans=Iveskite Y (taip) arba N (ne): "
 
 if /i "%ans%"=="Y" (
     echo.
-    echo 🚀 Vykdomas atnaujinimas... Prasome neuzdaryti lango.
+    echo  Vykdomas atnaujinimas... Prasome neuzdaryti lango.
     echo.
     winget upgrade --all --include-unknown --accept-package-agreements --accept-source-agreements
     echo.
     echo ============================================
-    echo    ✅ Viskas atnaujinta sekmingai!
+    echo    [OK] Viskas atnaujinta sekmingai!
     echo ============================================
 ) else (
     echo.

@@ -1,9 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Ultimate Privacy Shield
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry services"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo      Ultimate Privacy Shield 🛡️🔒
+echo      Ultimate Privacy Shield 🔒
 echo ============================================
 echo.
 echo Sis skriptas uzrakins Windows privatumo nustatymus,
@@ -55,10 +65,10 @@ echo [OK] Sisteminiai logai isvalyti.
 
 echo.
 echo ============================================
-echo    PRIVATUMAS UZRAKINTAS! ✨🛡️
+echo    PRIVATUMAS UZRAKINTAS!
 echo ============================================
-echo Jusu PC dabar siuncia 90%% maziau duomenu 
-echo Microsoft serveriams. 
+echo Jusu PC dabar siuncia 90%% maziau duomenu
+echo Microsoft serveriams.
 echo.
 pause
 exit /b

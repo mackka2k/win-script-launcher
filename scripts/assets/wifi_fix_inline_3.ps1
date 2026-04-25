@@ -1,0 +1,1 @@
+Get-NetAdapter -ErrorAction SilentlyContinue | Where-Object { $_.InterfaceDescription -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' -or $_.Name -match 'Wi-Fi|WiFi|Wireless|WLAN' } | Format-Table Name,Status,InterfaceDescription -AutoSize | Out-String

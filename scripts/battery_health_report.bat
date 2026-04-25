@@ -115,7 +115,9 @@ if /i "%genReport%"=="T" (
     echo [!] Generuojama detali baterijos ataskaita...
     set "reportPath=%USERPROFILE%\Desktop\Battery_Health_Report.html"
     powercfg /batteryreport /output "%USERPROFILE%\Desktop\Battery_Health_Report.html" >nul 2>&1
-    if %errorlevel% equ 0 (
+    if errorlevel 1 (
+        echo [!] KLAIDA: Nepavyko sugeneruoti ataskaitos.
+    ) else (
         echo [OK] Ataskaita issaugota: Desktop\Battery_Health_Report.html
         echo.
         echo Ataskaitoje rasite:
@@ -124,12 +126,12 @@ if /i "%genReport%"=="T" (
         echo   - Baterijos naudojimo statistika
         echo   - Energijos suvartojimo grafikus
         echo.
-        set /p openReport="Atidaryti ataskaita narstykleje? (T/N): "
-        if /i "!openReport!"=="T" (
+        choice /C TN /N /M "Atidaryti ataskaita narstykleje? (T/N): "
+        if errorlevel 2 (
+            rem User chose no.
+        ) else (
             start "" "%USERPROFILE%\Desktop\Battery_Health_Report.html"
         )
-    ) else (
-        echo [!] KLAIDA: Nepavyko sugeneruoti ataskaitos.
     )
 )
 

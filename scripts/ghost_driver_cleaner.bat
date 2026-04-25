@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Ghost Driver Cleaner - System Hygiene 👻🧹
+title Ghost Driver Cleaner - System Hygiene 🧹
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Ghost Driver Cleaner
@@ -24,7 +25,7 @@ echo Tai gali uztrukti kelias sekundes...
 echo.
 
 :: Naudojame PowerShell, kad gautume sąrašą ir suskaičiuotume
-powershell -NoProfile -Command "$devs = Get-PnpDevice | Where-Object {$_.Status -eq 'Unknown' -or $_.ConfigManagerErrorCode -eq 45}; if ($devs) { echo \"Rasta irenginiu: $($devs.Count)\"; $devs | Select-Object FriendlyName, InstanceId | Format-Table } else { echo 'Atjungtu irenginiu nerasta.' }"
+powershell -NoProfile -File "%~dp0assets\ghost_driver_cleaner_inline_1.ps1"
 
 echo.
 echo Pasirinkite veiksma:
@@ -41,11 +42,11 @@ exit /b
 echo.
 echo [!] Pradedamas valymas...
 :: Naudojame pnputil, kad pašalintume atjungtus įrenginius
-powershell -NoProfile -Command "Get-PnpDevice | Where-Object {$_.Status -eq 'Unknown' -or $_.ConfigManagerErrorCode -eq 45} | ForEach-Object { & pnputil /remove-device $_.InstanceId }"
+powershell -NoProfile -File "%~dp0assets\ghost_driver_cleaner_inline_2.ps1"
 
 echo.
 echo ============================================
-echo    VALYMAS BAIGTAS! ✨👻
+echo    VALYMAS BAIGTAS!
 echo ============================================
 echo.
 echo Visi nebenaudingi draiveriu irasai pashalinti.

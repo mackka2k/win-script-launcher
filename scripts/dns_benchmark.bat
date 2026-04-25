@@ -1,9 +1,9 @@
 @echo off
 setlocal EnableDelayedExpansion
-title DNS Benchmark 🌐⚡
+title DNS Benchmark
 
 echo ============================================
-echo    DNS Benchmark 🌐⚡
+echo    DNS Benchmark
 echo ============================================
 echo.
 echo Tikrinamas populiariausiu DNS serveriu greitis (Latency)...
@@ -26,13 +26,12 @@ for %%a in (%servers%) do (
         set "name=!name:~0,15!"
         set "ip=%%c             "
         set "ip=!ip:~0,15!"
-        
-        :: Pinginame 3 kartus ir imame vidurki
+
+        :: Matuojame 3 kartus per PowerShell, kad neveiktu nuo ping lokalizacijos.
         set "ms=N/A"
-        for /f "tokens=4 delims==" %%d in ('ping -n 3 %%c ^| find "Average"') do (
-            set "raw_ms=%%d"
-            set "ms=!raw_ms:~1,-2!"
-            
+        for /f "tokens=*" %%d in ('powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\dns_benchmark_probe.ps1" -ComputerName %%c 2^>nul') do (
+            set "ms=%%d"
+
             if !ms! LSS !min_ms! (
                 set "min_ms=!ms!"
                 set "best_dns=%%b (%%c)"
@@ -45,8 +44,8 @@ for %%a in (%servers%) do (
 echo --------------------------------------------------
 echo.
 if defined best_dns (
-    echo [PRO PATARIMAS]: Greiciausias DNS tavo tinkle yra: 
-    echo >> !best_dns! su !min_ms! ms latency.
+    echo [PRO PATARIMAS]: Greiciausias DNS tavo tinkle yra:
+    echo ^>^> !best_dns! su !min_ms! ms latency.
 ) else (
     echo [!] Nepavyko nustatyti greiciausio DNS. Patikrink interneto rysi.
 )

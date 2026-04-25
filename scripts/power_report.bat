@@ -6,7 +6,7 @@ echo ============================================
 echo    Power Consumption ^& Efficiency Report
 echo ============================================
 echo.
-echo Sis skriptas sugeneruos detalia ataskaita apie 
+echo Sis skriptas sugeneruos detalia ataskaita apie
 echo tavo kompiuterio energijos vartojima.
 echo.
 
@@ -34,7 +34,9 @@ if "%opt%"=="1" (
     echo Prasome neliesti kompiuterio, kol vyksta skenavimas.
     echo.
     powercfg /energy /output "%USERPROFILE%\Desktop\Energy_Report.html"
-    if %errorlevel% leq 1 (
+    if errorlevel 2 (
+        echo [!] KLAIDA: Nepavyko sugeneruoti energijos ataskaitos.
+    ) else (
         echo.
         echo [OK] Ataskaita sugeneruota: Desktop\Energy_Report.html
         start "" "%USERPROFILE%\Desktop\Energy_Report.html"
@@ -43,11 +45,11 @@ if "%opt%"=="1" (
     echo.
     echo [!] Generuojama baterijos ataskaita...
     powercfg /batteryreport /output "%USERPROFILE%\Desktop\Battery_Report.html"
-    if %errorlevel% equ 0 (
+    if errorlevel 1 (
+        echo [!] KLAIDA: Nepavyko sugeneruoti. Tikriausiai naudojate stacionaru PC.
+    ) else (
         echo [OK] Ataskaita sugeneruota: Desktop\Battery_Report.html
         start "" "%USERPROFILE%\Desktop\Battery_Report.html"
-    ) else (
-        echo [!] KLAIDA: Nepavyko sugeneruoti. Tikriausiai naudojate stacionaru PC.
     )
 ) else (
     exit /b 0

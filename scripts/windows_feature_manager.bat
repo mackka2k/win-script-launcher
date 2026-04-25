@@ -1,9 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Windows Feature Manager 💻⚙️
+title Windows Feature Manager 💻⚙
+chcp 65001 >nul 2>&1
 
 echo ============================================
-echo    Windows Feature Manager 💻⚙️
+echo    Windows Feature Manager 💻⚙
 echo ============================================
 echo.
 

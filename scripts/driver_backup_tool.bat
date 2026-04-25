@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Driver Backup Tool
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Driver Backup Tool
@@ -48,12 +49,12 @@ if %errorLevel% equ 0 (
 )
 
 echo [3/3] Kuriamas draiveriu sarasas (driver_list.txt)...
-powershell -NoProfile -Command "Get-WmiObject Win32_PnPSignedDriver | Select-Object DeviceName, DriverVersion, Manufacturer, DriverDate | Out-File -FilePath '%backup_dir%\driver_list.txt' -Encoding UTF8"
+powershell -NoProfile -File "%~dp0assets\driver_backup_tool_inline_1.ps1"
 echo [OK] Sarasas sukurtas.
 
 echo.
 echo ============================================
-echo    BACKUP BAIGTAS! ✨
+echo    BACKUP BAIGTAS!
 echo ============================================
 echo.
 echo Backup vieta: %backup_dir%

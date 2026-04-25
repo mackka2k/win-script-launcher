@@ -1,4 +1,15 @@
 @echo off
+setlocal EnableExtensions
+title Path Cleaner
+
+set "SCRIPT_BACKUP_TARGETS=path"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
+
 echo ============================================
 echo    PATH Environment Variable Cleaner
 echo ============================================
@@ -29,7 +40,7 @@ echo Analyzing PATH variable...
 echo.
 
 :: Use PowerShell with a script block
-powershell -NoProfile -ExecutionPolicy Bypass -Command "$path = [Environment]::GetEnvironmentVariable('Path', 'Machine'); $entries = $path -split ';' | Where-Object { $_.Trim() -ne '' }; Write-Host 'Total entries:' $entries.Count -ForegroundColor Cyan; Write-Host ''; $seen = @{}; $duplicates = 0; $invalid = 0; $valid = @(); foreach ($e in $entries) { $t = $e.Trim(); if ($seen.ContainsKey($t)) { Write-Host '[DUPLICATE]' $t -ForegroundColor Red; $duplicates++; } elseif (-not (Test-Path $t -ErrorAction SilentlyContinue)) { Write-Host '[INVALID]  ' $t -ForegroundColor Yellow; $invalid++; } else { $seen[$t] = $true; $valid += $t; } }; Write-Host ''; Write-Host 'Summary:' -ForegroundColor Yellow; Write-Host 'Duplicates:' $duplicates -ForegroundColor Red; Write-Host 'Invalid:' $invalid -ForegroundColor Yellow; Write-Host 'Valid:' $valid.Count -ForegroundColor Green; Write-Host ''; if ($duplicates -gt 0 -or $invalid -gt 0) { $ans = Read-Host 'Clean PATH? (Y/N)'; if ($ans -eq 'Y' -or $ans -eq 'y') { $newPath = $valid -join ';'; [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine'); Write-Host ''; Write-Host 'PATH cleaned! Removed' ($duplicates + $invalid) 'entries.' -ForegroundColor Green; } else { Write-Host 'Cancelled.' -ForegroundColor Yellow; } } else { Write-Host 'PATH is clean!' -ForegroundColor Green; }"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\path_cleaner_inline_1.ps1"
 
 echo.
 echo ============================================

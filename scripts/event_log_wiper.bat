@@ -1,6 +1,7 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Event Log Wiper 🧹🔒
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Event Log Wiper 🧹🔒
@@ -31,7 +32,7 @@ for /F "tokens=*" %%G in ('wevtutil.exe el') do (
 
 echo.
 echo ============================================
-echo    VALYMAS BAIGTAS! ✨
+echo    VALYMAS BAIGTAS!
 echo ============================================
 echo Visi Windows Event Logs buvo sekmingai isvalyti.
 echo.

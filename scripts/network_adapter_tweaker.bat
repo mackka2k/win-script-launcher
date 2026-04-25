@@ -1,6 +1,15 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Network Adapter Tweaker - Pro Performance 🌐⚡
+title Network Adapter Tweaker - Pro Performance
+
+
+set "SCRIPT_BACKUP_TARGETS=network"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Network Adapter Tweaker
@@ -43,7 +52,7 @@ powershell -NoProfile -Command "Get-NetAdapter | Where-Object Status -eq 'Up' | 
     # 4. Isjungti Interrupt Moderation (sumazina latency, bet siek tiek padidina CPU apkrova)
     try { Set-NetAdapterAdvancedProperty -Name $name -DisplayName '*InterruptModeration' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue; Write-Host \"  [+] Interrupt Moderation: DISABLED\" } catch {}; ^
     ^
-    # 5. Isjungti Flow Control 
+    # 5. Isjungti Flow Control
     try { Set-NetAdapterAdvancedProperty -Name $name -DisplayName '*FlowControl' -DisplayValue 'Disabled' -ErrorAction SilentlyContinue; Write-Host \"  [+] Flow Control: DISABLED\" } catch {}; ^
     ^
     # 6. Isjungti Wake on Magic Packet / Pattern Match
@@ -69,11 +78,11 @@ echo [OK] DNS isvalytas.
 
 echo.
 echo ============================================
-echo    TINKLO OPTIMIZAVIMAS BAIGTAS! 🌐🚀
+echo    TINKLO OPTIMIZAVIMAS BAIGTAS!
 echo ============================================
 echo.
 echo Pakeitimai pritaikyti visiems aktyviems adapteriams.
-echo Rekomenduojama perkrauti kompiuteri, kad visi 
+echo Rekomenduojama perkrauti kompiuteri, kad visi
 echo draiveriu lygio pakeitimai pilnai isigaliotu.
 echo.
 pause

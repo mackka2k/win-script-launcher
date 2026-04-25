@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Font Cache Rebuild
 echo ============================================
 echo    Font Cache Rebuild
 echo ============================================
@@ -58,10 +60,10 @@ echo.
 echo Your font cache has been successfully rebuilt.
 echo.
 echo Changes applied:
-echo [✓] Font cache service restarted
-echo [✓] Font cache files deleted
-echo [✓] User font cache cleared
-echo [✓] Windows Explorer restarted
+echo [OK] Font cache service restarted
+echo [OK] Font cache files deleted
+echo [OK] User font cache cleared
+echo [OK] Windows Explorer restarted
 echo.
 echo Font rendering should now be fixed!
 echo Restart your PC if issues persist.

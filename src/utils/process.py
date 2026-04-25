@@ -61,7 +61,7 @@ def create_process(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.DEVNULL,
+        stdin=subprocess.PIPE,
         text=True,
         encoding="utf-8",
         errors="replace",

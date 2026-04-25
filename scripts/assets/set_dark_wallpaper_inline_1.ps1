@@ -1,0 +1,1 @@
+$code = 'using System; using System.Runtime.InteropServices; public class Wallpaper { [DllImport("user32.dll", CharSet=CharSet.Auto)] public static extern int SystemParametersInfo(int uAction, int uParam, string lpvParam, int fuWinIni); }'; Add-Type -TypeDefinition $code; [Wallpaper]::SystemParametersInfo(20, 0, "$env:WALLPAPER_PATH", 3) | Out-Null

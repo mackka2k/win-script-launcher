@@ -1,12 +1,22 @@
 @echo off
 setlocal
 title Discord Stealth Cleaner
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=files"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo      Discord Stealth Cleaner 🕵️‍♂️🔒
+echo      Discord Stealth Cleaner 🕵‍♂🔒
 echo ============================================
 echo.
-echo Sis skriptas pasalins visus Discord pedsakus 
+echo Sis skriptas pasalins visus Discord pedsakus
 echo tavo kompiuteryje (HWID pedsakai, cache, ID).
 echo.
 
@@ -35,7 +45,7 @@ echo [OK] DNS isvalytas.
 
 echo.
 echo ============================================
-echo    VALYMAS BAIGTAS! ✨
+echo    VALYMAS BAIGTAS!
 echo ============================================
 echo.
 echo SVARBU JUSU SAUGUMUI:

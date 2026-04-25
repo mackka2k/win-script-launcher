@@ -44,7 +44,7 @@ if %errorlevel% equ 0 (
     echo Dabartinis laikas: %TIME%
 ) else (
     echo.
-    echo [!] KLAIDA: Nepavyko atvaziuoti laiko. 
+    echo [!] KLAIDA: Nepavyko atvaziuoti laiko.
     echo Bandoma perkrauti paslauga dar karta...
     net stop w32time >nul 2>&1
     net start w32time >nul 2>&1

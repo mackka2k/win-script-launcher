@@ -1,9 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Network Latency Optimizer (Ping Booster)
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry network"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo    Network Latency Optimizer 🚀⚡
+echo    Network Latency Optimizer
 echo ============================================
 echo.
 echo Sis skriptas optimizuos tinklo nustatymus:
@@ -52,7 +62,7 @@ echo [OK] DNS isvalytas.
 
 echo.
 echo ============================================
-echo    OPTIMIZAVIMAS BAIGTAS! ✨🎮
+echo    OPTIMIZAVIMAS BAIGTAS!
 echo ============================================
 echo Rekomenduojama perkrauti kompiuteri (Restart),
 echo kad visi nustatymai isituinkintu.

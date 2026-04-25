@@ -1,9 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Hosts File Manager 📝📂
+title Hosts File Manager 📝
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=hosts"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo    Hosts File Manager 📝📂
+echo    Hosts File Manager 📝
 echo ============================================
 echo.
 
@@ -50,7 +60,7 @@ if %errorlevel% equ 0 (
     echo 0.0.0.0 !domain! >> "%hosts_path%"
     echo 0.0.0.0 www.!domain! >> "%hosts_path%"
     echo [OK] Svetaine sekmingai uzblokuota sistemos lygiu.
-    
+
     :: Isvalome DNS cache, kad pakeitimas suveiktu iskarto
     ipconfig /flushdns >nul
     echo [OK] DNS talpykla isvalyta.

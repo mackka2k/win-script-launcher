@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Empty Folder Cleaner
 echo ============================================
 echo    Empty Folder Cleaner
 echo ============================================
@@ -14,7 +16,7 @@ if exist "%TEMP_FILE%" del "%TEMP_FILE%"
 
 :: Find empty folders using PowerShell
 echo Finding empty folders...
-powershell -Command "Get-ChildItem -Path '%USERPROFILE%' -Directory -Recurse -ErrorAction SilentlyContinue | Where-Object { (Get-ChildItem $_.FullName -Force -ErrorAction SilentlyContinue | Measure-Object).Count -eq 0 } | Select-Object -ExpandProperty FullName | Out-File -FilePath '%TEMP_FILE%' -Encoding UTF8"
+powershell -File "%~dp0assets\empty_folder_cleaner_inline_1.ps1"
 
 :: Count empty folders
 set COUNT=0
@@ -49,4 +51,3 @@ echo Deleted %DELETED% empty folder(s).
 :end
 if exist "%TEMP_FILE%" del "%TEMP_FILE%"
 pause
-

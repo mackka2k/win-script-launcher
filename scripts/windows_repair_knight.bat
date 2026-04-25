@@ -1,9 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Windows Repair Knight 🛡️🛠️
+title Windows Repair Knight
+chcp 65001 >nul 2>&1
 
 echo ============================================
-echo    Windows Repair Knight 🛡️🛠️
+echo    Windows Repair Knight
 echo ============================================
 echo.
 echo Sis skriptas atliks pilna sistemos patikra ir taisymą:
@@ -34,9 +35,9 @@ sfc /scannow
 echo.
 
 echo ============================================
-echo    REMTAS BAIGTAS! ✨
+echo    REMTAS BAIGTAS!
 echo ============================================
-echo Jei SFC rado klaidu ir jas sutvarke, 
+echo Jei SFC rado klaidu ir jas sutvarke,
 echo rekomenduojama perkrauti kompiuteri.
 echo.
 pause

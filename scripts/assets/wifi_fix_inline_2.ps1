@@ -1,0 +1,1 @@
+Get-PnpDevice -ErrorAction SilentlyContinue | Where-Object { $_.FriendlyName -match 'Wi-Fi|WiFi|Wireless|WLAN|802\.11' } | Select-Object Status,Class,FriendlyName | Format-Table -AutoSize | Out-String

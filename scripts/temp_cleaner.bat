@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Temp Cleaner
 echo ============================================
 echo    Temporary Files Cleaner
 echo ============================================

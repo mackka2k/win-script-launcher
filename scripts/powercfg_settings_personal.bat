@@ -1,9 +1,19 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Asmeniniai Sistemos Nustatymai (Personal Setup)
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=registry services power files"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
-echo    Asmeniniai Sistemos Nustatymai 🛠️✨
+echo    Asmeniniai Sistemos Nustatymai
 echo ============================================
 echo.
 for /f "tokens=*" %%a in ('powershell -NoProfile -Command "Get-Date -Format 'HH:mm yyyy/M/d'"') do set datetime=%%a
@@ -91,14 +101,14 @@ echo [OK] Sistemos patobulinimai pritaikyti.
 echo [6/6] Laikinu failu valymas...
 del /s /f /q %temp%\*.* >nul 2>&1
 del /s /f /q %WinDir%\temp\*.* >nul 2>&1
-rmdir /s /q "C:\Windows\Prefetch" >nul 2>&1 
+rmdir /s /q "C:\Windows\Prefetch" >nul 2>&1
 :: Thumbcache valymas priverstinai
 del /F /S /Q /A %LocalAppData%\Microsoft\Windows\Explorer\thumbcache_*.db >nul 2>&1
 echo [OK] Sistemos siuksles isvalytos.
 
 echo.
 echo ============================================
-echo    SANKA BAIGTA! ✨🚀
+echo    SANKA BAIGTA!
 echo ============================================
 echo.
 echo 1. Laikas: Vilnius (UTC+02:00)

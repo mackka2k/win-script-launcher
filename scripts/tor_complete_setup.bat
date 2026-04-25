@@ -32,7 +32,7 @@ if not exist "%TOR_DIR%" mkdir "%TOR_DIR%"
 
 echo [1/5] Opening download page...
 echo.
-start https://www.torproject.org/download/
+start "" "https://www.torproject.org/download/"
 echo.
 echo [INSTRUCTIONS:]
 echo 1. Download "Windows (Portable)" version
@@ -63,7 +63,7 @@ echo %TOR_DIR%\Browser
 echo.
 pause
 
-start /wait "%TOR_DIR%\tor-browser.exe"
+start "" /wait "%TOR_DIR%\tor-browser.exe"
 
 :: Find Tor Browser directory
 set "BROWSER_DIR=%TOR_DIR%\Browser\TorBrowser"
@@ -114,7 +114,7 @@ echo [OK] Launch script created
 echo.
 
 echo [5/5] Creating desktop shortcut...
-powershell -Command "$WshShell = New-Object -ComObject WScript.Shell; $Shortcut = $WshShell.CreateShortcut('%USERPROFILE%\Desktop\Tor Browser.lnk'); $Shortcut.TargetPath = '%TOR_DIR%\LaunchTor.bat'; $Shortcut.IconLocation = '%BROWSER_DIR%\Browser\firefox.exe,0'; $Shortcut.Save()" 2>nul
+powershell -File "%~dp0assets\tor_complete_setup_inline_1.ps1" 2>nul
 echo [OK] Desktop shortcut created
 echo.
 
@@ -127,7 +127,7 @@ echo Launch: Desktop shortcut or %TOR_DIR%\LaunchTor.bat
 echo.
 echo [NEXT STEPS:]
 echo 1. Launch Tor Browser
-echo 2. Click Shield icon → Select "Safest"
+echo 2. Click Shield icon -> Select "Safest"
 echo 3. Read OPSEC Guide (Option 2)
 echo 4. Verify connection (Option 3)
 echo.
@@ -164,20 +164,20 @@ echo    CRITICAL OPSEC RULES
 echo ============================================
 echo.
 echo [DO:]
-echo ✅ Use VPN before Tor
-echo ✅ Keep security level "Safest"
-echo ✅ Use .onion sites when possible
-echo ✅ Clear cookies after each session
-echo ✅ Verify connection before browsing
+echo [OK] Use VPN before Tor
+echo [OK] Keep security level "Safest"
+echo [OK] Use .onion sites when possible
+echo [OK] Clear cookies after each session
+echo [OK] Verify connection before browsing
 echo.
 echo [DON'T:]
-echo ❌ Maximize browser window
-echo ❌ Login to personal accounts
-echo ❌ Download files while connected
-echo ❌ Enable JavaScript on unknown sites
-echo ❌ Install browser extensions
-echo ❌ Torrent over Tor
-echo ❌ Click random links
+echo [X] Maximize browser window
+echo [X] Login to personal accounts
+echo [X] Download files while connected
+echo [X] Enable JavaScript on unknown sites
+echo [X] Install browser extensions
+echo [X] Torrent over Tor
+echo [X] Click random links
 echo.
 pause
 cls
@@ -211,23 +211,23 @@ echo ============================================
 echo    COMMON MISTAKES TO AVOID
 echo ============================================
 echo.
-echo 1. ❌ Torrenting over Tor
+echo 1. [X] Torrenting over Tor
 echo    - Exposes real IP address
 echo    - Overloads Tor network
 echo.
-echo 2. ❌ Opening downloaded files while connected
+echo 2. [X] Opening downloaded files while connected
 echo    - Files can "phone home"
 echo    - Disconnect Tor first
 echo.
-echo 3. ❌ Using personal information
+echo 3. [X] Using personal information
 echo    - Real name, email, phone
 echo    - Creates identity correlation
 echo.
-echo 4. ❌ Installing browser extensions
+echo 4. [X] Installing browser extensions
 echo    - Fingerprinting vector
 echo    - Potential malware
 echo.
-echo 5. ❌ Clicking random links
+echo 5. [X] Clicking random links
 echo    - Phishing attacks
 echo    - Malware delivery
 echo    - Law enforcement honeypots
@@ -302,22 +302,22 @@ echo.
 echo Opening verification sites...
 echo.
 echo [1] Tor Check
-start https://check.torproject.org/
+start "" "https://check.torproject.org/"
 timeout /t 2 >nul
 echo.
 echo [2] DNS Leak Test
-start https://dnsleaktest.com/
+start "" "https://dnsleaktest.com/"
 timeout /t 2 >nul
 echo.
 echo [3] WebRTC Leak Test
-start https://browserleaks.com/webrtc
+start "" "https://browserleaks.com/webrtc"
 echo.
 echo.
 echo [EXPECTED RESULTS:]
 echo.
-echo ✅ Tor Check: "Congratulations. This browser is configured to use Tor."
-echo ✅ DNS Leak: Shows Tor exit node IP (NOT your real IP)
-echo ✅ WebRTC: No local IP visible
+echo [OK] Tor Check: "Congratulations. This browser is configured to use Tor."
+echo [OK] DNS Leak: Shows Tor exit node IP (NOT your real IP)
+echo [OK] WebRTC: No local IP visible
 echo.
 echo If any test fails, DO NOT use Tor for sensitive browsing!
 echo.

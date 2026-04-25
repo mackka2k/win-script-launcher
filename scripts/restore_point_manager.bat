@@ -1,9 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Restore Point Manager 🕒🛡️
+title Restore Point Manager 🕒
+chcp 65001 >nul 2>&1
 
 echo ============================================
-echo    Restore Point Manager 🕒🛡️
+echo    Restore Point Manager 🕒
 echo ============================================
 echo.
 
@@ -34,7 +35,7 @@ goto menu
 :list
 echo.
 echo [!] Ieskoma atkūrimo taškų...
-powershell -NoProfile -Command "Get-ComputerRestorePoint | Select-Object SequenceNumber, Description, @{Label='Date';Expression={$_.CreationTime}}, RestorePointType | Format-Table -AutoSize"
+powershell -NoProfile -File "%~dp0assets\restore_point_manager_inline_1.ps1"
 echo.
 pause
 goto menu

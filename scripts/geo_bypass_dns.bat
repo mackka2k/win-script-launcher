@@ -1,6 +1,16 @@
 @echo off
 setlocal EnableDelayedExpansion
 title Geo-Bypass DNS Switcher
+chcp 65001 >nul 2>&1
+
+
+set "SCRIPT_BACKUP_TARGETS=network"
+powershell -NoProfile -ExecutionPolicy Bypass -File "%~dp0assets\common_backup.ps1" -ScriptName "%~nx0" -Targets %SCRIPT_BACKUP_TARGETS%
+if errorlevel 1 (
+    echo [!] Backup guard failed.
+    choice /C YN /N /M "Continue without backup? (Y/N): "
+    if errorlevel 2 exit /b 1
+)
 
 echo ============================================
 echo    Geo-Bypass DNS Switcher
@@ -43,8 +53,8 @@ if "%opt%"=="1" (
     set "name=Quad9"
 ) else if "%opt%"=="4" (
     echo.
-    echo 🔄 Grąžinami automatiniai nustatymai...
-    powershell -Command "Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq 'Connected' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceAlias $_.InterfaceAlias -ResetServerAddresses }"
+    echo  Grąžinami automatiniai nustatymai...
+    powershell -File "%~dp0assets\geo_bypass_dns_inline_1.ps1"
     echo [OK] DNS nustatytas į automatinį.
     pause
     exit /b 0
@@ -53,17 +63,17 @@ if "%opt%"=="1" (
 )
 
 echo.
-echo 🚀 Nustatomas %name% DNS...
+echo  Nustatomas %name% DNS...
 
 :: Apply DNS to all active network adapters
-powershell -Command "Get-NetIPInterface -AddressFamily IPv4 | Where-Object { $_.ConnectionState -eq 'Connected' } | ForEach-Object { Set-DnsClientServerAddress -InterfaceAlias $_.InterfaceAlias -ServerAddresses ('%dns1%', '%dns2%') }"
+powershell -File "%~dp0assets\geo_bypass_dns_inline_2.ps1"
 
 :: Flush DNS Cache to apply changes immediately
 ipconfig /flushdns >nul
 
 echo.
 echo ============================================
-echo    ✅ %name% DNS aktyvuotas!
+echo    [OK] %name% DNS aktyvuotas!
 echo ============================================
 echo DNS talpykla išvalyta. Naršymas dabar saugesnis.
 echo.

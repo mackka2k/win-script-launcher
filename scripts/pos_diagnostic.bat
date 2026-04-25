@@ -1,5 +1,7 @@
 @echo off
 setlocal enabledelayedexpansion
+title Pos Diagnostic
+chcp 65001 >nul 2>&1
 cls
 
 set "output_file=pos_info_%COMPUTERNAME%.txt"

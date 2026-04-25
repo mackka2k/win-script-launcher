@@ -1,6 +1,7 @@
 @echo off
 setlocal
 title Instant Restore Point
+chcp 65001 >nul 2>&1
 
 echo ============================================
 echo    Instant Windows Restore Point
@@ -23,7 +24,7 @@ powershell -Command "Enable-ComputerRestore -Drive 'C:\' -ErrorAction SilentlyCo
 
 echo [2/3] Konfiguruojami nustatymai...
 :: Set frequency to 0 to allow multiple restore points in a short period
-powershell -Command "Set-ItemProperty -Path 'HKLM:\Software\Microsoft\Windows NT\CurrentVersion\SystemRestore' -Name 'SystemRestorePointCreationFrequency' -Value 0 -ErrorAction SilentlyContinue"
+powershell -File "%~dp0assets\create_restore_point_inline_1.ps1"
 
 echo [3/3] Kuriamas atkūrimo taškas...
 echo (Tai gali užtrukti apie 30-60 sekundžių, prašome palaukti)
@@ -35,7 +36,7 @@ powershell -Command "Checkpoint-Computer -Description \"Manual_Restore_Point_%DA
 if %errorlevel% equ 0 (
     echo.
     echo ============================================
-    echo    ✅ Atkurimo taskas sukurtas sekmingai!
+    echo    [OK] Atkurimo taskas sukurtas sekmingai!
     echo ============================================
     echo Jei kas nors negerai su sistema, galesite grižti
     echo i sia akimirka per 'System Restore' meniu.

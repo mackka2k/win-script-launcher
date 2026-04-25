@@ -1,9 +1,10 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Explorer Restart PRO 🚀📂
+title Explorer Restart PRO
+chcp 65001 >nul 2>&1
 
 echo ============================================
-echo    Explorer Restart PRO 🚀📂
+echo    Explorer Restart PRO
 echo ============================================
 echo.
 echo Sis skriptas atliks pilna Windows UI perkrovima:
@@ -41,9 +42,9 @@ echo [OK] Explorer paleistas.
 
 echo.
 echo ============================================
-echo    UI PERKRAUTAS! ✨
+echo    UI PERKRAUTAS!
 echo ============================================
-echo Jei turejote klaidų su piktogramomis ar uzduociu juosta, 
+echo Jei turejote klaidų su piktogramomis ar uzduociu juosta,
 echo jos turetu buti dingusios.
 echo.
 pause

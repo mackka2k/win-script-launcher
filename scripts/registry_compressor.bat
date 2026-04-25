@@ -1,6 +1,6 @@
 @echo off
 setlocal EnableDelayedExpansion
-title Registry Optimizer ^& Compressor 💎🚀
+title Registry Optimizer ^& Compressor
 
 echo ============================================
 echo    Registry Optimizer ^& Compressor
@@ -37,7 +37,7 @@ echo [OK] Patikra baigta.
 
 echo.
 echo ============================================
-echo    OPTIMIZAVIMAS BAIGTAS! 💎✨
+echo    OPTIMIZAVIMAS BAIGTAS!
 echo ============================================
 echo.
 echo Atlikti veiksmai:

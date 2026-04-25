@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Ip Information
 echo ============================================
 echo    IP Information
 echo ============================================

@@ -1,0 +1,1 @@
+$devs = Get-PnpDevice | Where-Object {$_.Status -eq 'Unknown' -or $_.ConfigManagerErrorCode -eq 45}; if ($devs) { echo "Rasta irenginiu: $($devs.Count)"; $devs | Select-Object FriendlyName, InstanceId | Format-Table } else { echo 'Atjungtu irenginiu nerasta.' }

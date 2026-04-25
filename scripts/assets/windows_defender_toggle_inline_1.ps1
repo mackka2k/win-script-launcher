@@ -1,0 +1,1 @@
+$status = Get-MpPreference -ErrorAction SilentlyContinue; if ($status) { if ($status.DisableRealtimeMonitoring) { Write-Host 'Current Status: ' -NoNewline; Write-Host 'DISABLED' -ForegroundColor Red } else { Write-Host 'Current Status: ' -NoNewline; Write-Host 'ENABLED' -ForegroundColor Green } } else { Write-Host 'Unable to determine status.' -ForegroundColor Yellow }

@@ -28,9 +28,7 @@ class TestScriptExecutor:
         assert script_executor.timeout_seconds == 10
         assert script_executor.get_active_count() == 0
 
-    def test_execute_nonexistent_script_raises(
-        self, script_executor: ScriptExecutor
-    ) -> None:
+    def test_execute_nonexistent_script_raises(self, script_executor: ScriptExecutor) -> None:
         fake = Script(
             path=Path("/definitely/does/not/exist.py"),
             name="fake.py",
@@ -60,8 +58,8 @@ class TestScriptExecutor:
         assert _wait_until(lambda: execution.is_terminal, timeout=15)
         assert execution.status == ExecutionStatus.SUCCESS
         assert execution.return_code == 0
-        assert any("hello-output" in line for line in output)
-        assert any("hello-output" in line for line in execution.output)
+        assert "hello-output" in "".join(output)
+        assert "hello-output" in execution.full_output
         assert len(completed) == 1
 
     def test_failed_script_reports_failed(
@@ -82,9 +80,7 @@ class TestScriptExecutor:
         python_script_factory,
     ) -> None:
         executor = ScriptExecutor(timeout_seconds=1)
-        path = python_script_factory(
-            name="sleep.py", body="import time; time.sleep(10)"
-        )
+        path = python_script_factory(name="sleep.py", body="import time; time.sleep(10)")
         script = Script.from_path(path)
 
         execution = executor.execute_script(script)
@@ -96,9 +92,7 @@ class TestScriptExecutor:
         script_executor: ScriptExecutor,
         python_script_factory,
     ) -> None:
-        path = python_script_factory(
-            name="longsleep.py", body="import time; time.sleep(30)"
-        )
+        path = python_script_factory(name="longsleep.py", body="import time; time.sleep(30)")
         script = Script.from_path(path)
 
         execution = script_executor.execute_script(script)
@@ -122,12 +116,8 @@ class TestScriptExecutor:
         script_executor: ScriptExecutor,
         python_script_factory,
     ) -> None:
-        path_a = python_script_factory(
-            name="a.py", body="import time; time.sleep(30)"
-        )
-        path_b = python_script_factory(
-            name="b.py", body="import time; time.sleep(30)"
-        )
+        path_a = python_script_factory(name="a.py", body="import time; time.sleep(30)")
+        path_b = python_script_factory(name="b.py", body="import time; time.sleep(30)")
         script_a = Script.from_path(path_a)
         script_b = Script.from_path(path_b)
 
@@ -144,9 +134,7 @@ class TestScriptExecutor:
         script_executor: ScriptExecutor,
         python_script_factory,
     ) -> None:
-        path = python_script_factory(
-            name="mid.py", body="import time; time.sleep(15)"
-        )
+        path = python_script_factory(name="mid.py", body="import time; time.sleep(15)")
         script = Script.from_path(path)
 
         assert not script_executor.is_running(script)
@@ -177,15 +165,78 @@ class TestScriptExecutor:
         script_executor: ScriptExecutor,
         python_script_factory,
     ) -> None:
-        path = python_script_factory(
-            name="dup.py", body="import time; time.sleep(5)"
-        )
+        path = python_script_factory(name="dup.py", body="import time; time.sleep(5)")
         script = Script.from_path(path)
         e1 = script_executor.execute_script(script)
         e2 = script_executor.execute_script(script)
         assert e1 is e2
         script_executor.cancel_execution(script)
         assert _wait_until(lambda: e1.is_terminal, timeout=5)
+
+    def test_execution_writes_audit_log(self, tmp_path: Path, python_script_factory) -> None:
+        executor = ScriptExecutor(timeout_seconds=10, log_dir=tmp_path / "logs")
+        path = python_script_factory(body="print('logged-output')")
+        script = Script.from_path(path)
+
+        execution = executor.execute_script(script)
+
+        assert _wait_until(lambda: execution.is_terminal, timeout=10)
+        assert execution.log_path is not None
+        assert execution.log_path.exists()
+        log_text = execution.log_path.read_text(encoding="utf-8")
+        assert "START" in log_text
+        assert "logged-output" in log_text
+        assert "END success" in log_text
+
+    def test_send_input_to_running_script(
+        self, script_executor: ScriptExecutor, python_script_factory
+    ) -> None:
+        path = python_script_factory(
+            name="input.py",
+            body=(
+                "name = input('Name: ')\n"
+                "print(f'hello {name}')\n"
+            ),
+        )
+        script = Script.from_path(path)
+
+        execution = script_executor.execute_script(script)
+
+        assert _wait_until(lambda: "Name: " in execution.full_output, timeout=10)
+        assert script_executor.send_input(script, "Alice")
+        assert _wait_until(lambda: execution.is_terminal, timeout=10)
+
+        assert execution.status == ExecutionStatus.SUCCESS
+        assert "hello Alice" in execution.full_output
+
+    def test_send_input_without_active_script_returns_false(
+        self, script_executor: ScriptExecutor, python_script_factory
+    ) -> None:
+        path = python_script_factory()
+        script = Script.from_path(path)
+
+        assert script_executor.send_input(script, "ignored") is False
+
+    def test_chatty_output_is_delivered_in_batches(
+        self, script_executor: ScriptExecutor, python_script_factory
+    ) -> None:
+        path = python_script_factory(
+            name="chatty.py",
+            body=(
+                "import sys\n"
+                "sys.stdout.write('x' * 10000)\n"
+                "sys.stdout.flush()\n"
+            ),
+        )
+        script = Script.from_path(path)
+        output: list[str] = []
+
+        execution = script_executor.execute_script(script, output_callback=output.append)
+
+        assert _wait_until(lambda: execution.is_terminal, timeout=10)
+        assert execution.status == ExecutionStatus.SUCCESS
+        assert "x" * 10000 in execution.full_output
+        assert len(output) < 20
 
 
 @pytest.mark.windows
@@ -195,16 +246,12 @@ class TestBatchExecution:
     def test_batch_script_success(
         self, script_executor: ScriptExecutor, batch_script_factory
     ) -> None:
-        path = batch_script_factory(
-            name="hi.bat", body="@echo off\r\necho batch-ok\r\n"
-        )
+        path = batch_script_factory(name="hi.bat", body="@echo off\r\necho batch-ok\r\n")
         script = Script.from_path(path)
 
         output: list[str] = []
-        execution = script_executor.execute_script(
-            script, output_callback=output.append
-        )
+        execution = script_executor.execute_script(script, output_callback=output.append)
 
         assert _wait_until(lambda: execution.is_terminal, timeout=15)
         assert execution.status == ExecutionStatus.SUCCESS
-        assert any("batch-ok" in line for line in execution.output)
+        assert "batch-ok" in execution.full_output

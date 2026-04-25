@@ -1,0 +1,1 @@
+Set-MpPreference -DisableRealtimeMonitoring $false; Set-MpPreference -DisableBehaviorMonitoring $false; Set-MpPreference -DisableBlockAtFirstSeen $false; Set-MpPreference -DisableIOAVProtection $false; Set-MpPreference -DisableScriptScanning $false; Set-MpPreference -SubmitSamplesConsent 1; Set-MpPreference -MAPSReporting 2

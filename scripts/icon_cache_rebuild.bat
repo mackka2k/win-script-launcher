@@ -1,4 +1,6 @@
 @echo off
+setlocal EnableExtensions
+title Icon Cache Rebuild
 echo ============================================
 echo    Icon Cache Rebuild
 echo ============================================
@@ -47,9 +49,9 @@ echo.
 echo Your icon cache has been successfully rebuilt.
 echo.
 echo Changes applied:
-echo [✓] Icon cache cleared
-echo [✓] Thumbnail cache cleared
-echo [✓] Windows Explorer restarted
+echo [OK] Icon cache cleared
+echo [OK] Thumbnail cache cleared
+echo [OK] Windows Explorer restarted
 echo.
 echo Your desktop icons should now display correctly!
 echo If icons still look wrong, try restarting your PC.

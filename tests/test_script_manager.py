@@ -5,7 +5,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-from src.models import Script, ScriptType
+from src.models import RiskLevel, Script, ScriptType
 from src.script_manager import ScriptManager
 
 
@@ -27,7 +27,9 @@ class TestScriptManager:
         types = {s.script_type for s in scripts}
         assert types == {ScriptType.BATCH, ScriptType.PYTHON, ScriptType.POWERSHELL}
 
-    def test_ignore_non_script_files(self, script_manager: ScriptManager, scripts_dir: Path) -> None:
+    def test_ignore_non_script_files(
+        self, script_manager: ScriptManager, scripts_dir: Path
+    ) -> None:
         (scripts_dir / "readme.txt").write_text("hello")
         (scripts_dir / "data.json").write_text("{}")
         (scripts_dir / "keep.bat").write_text("@echo off\n")
@@ -53,7 +55,9 @@ class TestScriptManager:
         assert len(filtered) == 1
         assert filtered[0].name == "cleaner.bat"
 
-    def test_filter_case_insensitive(self, script_manager: ScriptManager, scripts_dir: Path) -> None:
+    def test_filter_case_insensitive(
+        self, script_manager: ScriptManager, scripts_dir: Path
+    ) -> None:
         (scripts_dir / "Alpha.bat").write_text("@echo off\n")
         script_manager.discover_scripts()
         assert len(script_manager.filter_scripts(query="ALPHA")) == 1
@@ -61,12 +65,54 @@ class TestScriptManager:
     def test_metadata_file_loaded(self, scripts_dir: Path, cache_path: Path) -> None:
         (scripts_dir / "x.bat").write_text("@echo off\n")
         (scripts_dir / "script_metadata.json").write_text(
-            json.dumps({"x.bat": {"category": "Tools", "description": "Does X"}})
+            json.dumps(
+                {
+                    "x.bat": {
+                        "category": "Tools",
+                        "description": "Does X",
+                        "risk_level": "destructive",
+                        "requires_admin": True,
+                        "requires_reboot": True,
+                        "expected_changes": ["Deletes test data"],
+                        "backup_targets": ["files"],
+                        "preview_command": "echo preview",
+                    }
+                }
+            )
         )
         manager = ScriptManager(scripts_dir, cache_path=cache_path)
         scripts = manager.discover_scripts()
         assert scripts[0].category == "Tools"
         assert scripts[0].description == "Does X"
+        assert scripts[0].risk_level is RiskLevel.DESTRUCTIVE
+        assert scripts[0].requires_admin is True
+        assert scripts[0].requires_reboot is True
+        assert scripts[0].expected_changes == ["Deletes test data"]
+        assert scripts[0].backup_targets == ["files"]
+        assert scripts[0].preview_command == "echo preview"
+
+    def test_risk_metadata_inferred_from_script_content(
+        self, scripts_dir: Path, cache_path: Path
+    ) -> None:
+        (scripts_dir / "wipe.bat").write_text("@echo off\nnet session\nrmdir /s /q old\n")
+
+        scripts = ScriptManager(scripts_dir, cache_path=cache_path).discover_scripts()
+
+        assert scripts[0].risk_level is RiskLevel.DESTRUCTIVE
+        assert scripts[0].requires_admin is True
+        assert "Delete files, folders, caches, or application data" in scripts[0].expected_changes
+        assert "files" in scripts[0].backup_targets
+
+    def test_filter_matches_risk_and_requirements(
+        self, scripts_dir: Path, cache_path: Path
+    ) -> None:
+        (scripts_dir / "restart.bat").write_text("@echo off\nshutdown /r /t 0\npowercfg /list\n")
+        manager = ScriptManager(scripts_dir, cache_path=cache_path)
+        manager.discover_scripts()
+
+        assert len(manager.filter_scripts(query="moderate")) == 1
+        assert len(manager.filter_scripts(query="requires reboot")) == 1
+        assert len(manager.filter_scripts(query="power configuration")) == 1
 
     def test_cache_roundtrip(self, scripts_dir: Path, cache_path: Path) -> None:
         (scripts_dir / "a.bat").write_text("@echo off\n")
@@ -79,10 +125,25 @@ class TestScriptManager:
         scripts = m2.discover_scripts()
         assert len(scripts) == 1
         assert scripts[0].name == "a.bat"
+        assert scripts[0].risk_level is RiskLevel.SAFE
 
-    def test_cache_invalidates_on_new_file(
-        self, scripts_dir: Path, cache_path: Path
+    def test_cache_hit_skips_script_body_inference(
+        self, scripts_dir: Path, cache_path: Path, monkeypatch
     ) -> None:
+        (scripts_dir / "a.bat").write_text("@echo off\n")
+        ScriptManager(scripts_dir, cache_path=cache_path).discover_scripts()
+
+        def fail_read(_path: Path) -> str:
+            raise AssertionError("cache hit should not re-read script bodies")
+
+        monkeypatch.setattr(ScriptManager, "_safe_read_script", staticmethod(fail_read))
+
+        scripts = ScriptManager(scripts_dir, cache_path=cache_path).discover_scripts()
+
+        assert len(scripts) == 1
+        assert scripts[0].name == "a.bat"
+
+    def test_cache_invalidates_on_new_file(self, scripts_dir: Path, cache_path: Path) -> None:
         (scripts_dir / "a.bat").write_text("@echo off\n")
         manager = ScriptManager(scripts_dir, cache_path=cache_path)
         manager.discover_scripts()
@@ -91,9 +152,7 @@ class TestScriptManager:
         scripts = ScriptManager(scripts_dir, cache_path=cache_path).discover_scripts()
         assert len(scripts) == 2
 
-    def test_cache_invalidates_on_rename(
-        self, scripts_dir: Path, cache_path: Path
-    ) -> None:
+    def test_cache_invalidates_on_rename(self, scripts_dir: Path, cache_path: Path) -> None:
         original = scripts_dir / "a.bat"
         original.write_text("@echo off\n")
         ScriptManager(scripts_dir, cache_path=cache_path).discover_scripts()
@@ -119,9 +178,7 @@ class TestScriptManager:
         assert s.description == "Custom"
         assert s.run_count == 5
 
-    def test_delete_script(
-        self, script_manager: ScriptManager, scripts_dir: Path
-    ) -> None:
+    def test_delete_script(self, script_manager: ScriptManager, scripts_dir: Path) -> None:
         path = scripts_dir / "doomed.bat"
         path.write_text("@echo off\n")
         script_manager.discover_scripts()
