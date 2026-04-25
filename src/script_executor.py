@@ -15,7 +15,6 @@ Contract:
 from __future__ import annotations
 
 import codecs
-import os
 import subprocess
 import threading
 import time
@@ -56,7 +55,7 @@ class ScriptExecutor:
         self.log_dir = log_dir or Path("logs") / "scripts"
 
         self._active: dict[str, ScriptExecution] = {}
-        self._processes: dict[str, subprocess.Popen[str]] = {}
+        self._processes: dict[str, subprocess.Popen[bytes]] = {}
         self._lock = threading.Lock()
 
     # --- Public API ----------------------------------------------------
@@ -176,7 +175,7 @@ class ScriptExecutor:
 
         line = text if text.endswith("\n") else f"{text}\n"
         try:
-            process.stdin.write(line)
+            process.stdin.write(line.encode("utf-8"))
             process.stdin.flush()
         except (BrokenPipeError, OSError, ValueError) as e:
             logger.warning(f"Failed to send input to {script.name}: {e}")
@@ -274,7 +273,7 @@ class ScriptExecutor:
     ) -> None:
         script = execution.script
         command = get_script_command(script.path, script.script_type)
-        process = create_process(command, cwd=script.path.parent)
+        process = create_process(command, cwd=script.path.parent, attach_stdin=True)
 
         with self._lock:
             self._processes[execution_id] = process
@@ -330,14 +329,12 @@ class ScriptExecutor:
     ) -> None:
         if stream is None:
             return
+        read = getattr(stream, "read1", None) or stream.read  # type: ignore[attr-defined]
         try:
             decoder = codecs.getincrementaldecoder("utf-8")(errors="replace")
             prefix_next_chunk = bool(prefix)
             while True:
-                data = os.read(
-                    stream.buffer.raw.fileno(),  # type: ignore[union-attr]
-                    ScriptExecutor._STREAM_READ_SIZE,
-                )
+                data = read(ScriptExecutor._STREAM_READ_SIZE)
                 if not data:
                     break
                 text = decoder.decode(data)
@@ -379,11 +376,13 @@ class ScriptExecutor:
         if execution.log_path is None:
             return
         with execution._log_lock:
-            if execution._log_file is not None:
-                execution._log_file.write(text)
+            log_file = execution._log_file
+            if log_file is None:
+                # Log has already been closed (e.g. late callback after
+                # _close_log on executor shutdown). Drop silently rather than
+                # reopen and race with the file being removed.
                 return
-            with open(execution.log_path, "a", encoding="utf-8", errors="replace") as f:
-                f.write(text)
+            log_file.write(text)
 
     @staticmethod
     def _open_log(execution: ScriptExecution) -> None:

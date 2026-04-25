@@ -62,6 +62,7 @@ class Application:
             timeout_seconds=self.config.execution.timeout_seconds,
             max_output_lines=self.config.execution.max_output_lines,
             run_batch_in_new_window=self.config.execution.run_batch_in_new_window,
+            log_dir=self.log_dir / "scripts",
         )
 
         ctk.set_appearance_mode(self.config.theme.mode.capitalize())
@@ -139,6 +140,12 @@ class Application:
 
     def _persist_state(self) -> None:
         """Persist config and cancel running scripts on close."""
+        if self.main_window is not None:
+            try:
+                self.main_window.snapshot_geometry()
+            except Exception:  # noqa: BLE001
+                logger.exception("Failed to snapshot window geometry")
+
         try:
             self.config.save(self.config_path)
             logger.info("Configuration saved")

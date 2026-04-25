@@ -4,6 +4,45 @@ All notable changes to this project are documented here.
 The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Added
+
+- GitHub Actions CI workflow (`.github/workflows/ci.yml`) running ruff,
+  mypy, and pytest on Windows across Python 3.10–3.12, plus a
+  `pre-commit` job on Ubuntu.
+- UI smoke tests that instantiate `MainWindow` against a headless
+  CustomTkinter root and exercise refresh, search, and
+  `snapshot_geometry`.
+- `MainWindow.snapshot_geometry()` — persists current window size and
+  position into `config.window` before shutdown so `remember_size` and
+  `remember_position` survive restarts.
+- `create_process(attach_stdin=...)` — stdin pipe is now opt-in; the
+  executor opts in so `send_input` keeps working.
+
+### Fixed
+
+- `WindowConfig.last_x` / `last_y` / `remember_size` / `remember_position`
+  are no longer dead fields; `MainWindow._initial_geometry` restores them
+  on startup (with off-screen guard) and `snapshot_geometry` writes them
+  back on close.
+- Audit logs now land in `<base_dir>/logs/scripts/<name>/<ts>.log` as the
+  README claims; `Application` passes an explicit `log_dir` to
+  `ScriptExecutor` instead of relying on the CWD-relative default.
+- README `check_admin_on_startup` default corrected to match the code
+  (`false`).
+
+### Changed
+
+- `create_process` now spawns subprocesses in **binary mode**
+  (`stdout=PIPE`, `stderr=PIPE`, no `text=True`) and `_pump_stream`
+  reads bytes via `stream.read1(...)` + an incremental UTF-8 decoder.
+  This removes the `stream.buffer.raw.fileno()` hack and the mixed
+  text/binary IO path.
+- `ScriptExecutor._write_log` no longer has a dead "open per write"
+  fallback; the log file is opened once per run and closed in
+  `_close_log`.
+
 ## [3.0.0] — 2026-04-21
 
 Full rewrite for correctness, safety, and maintainability.

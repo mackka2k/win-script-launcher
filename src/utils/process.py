@@ -48,8 +48,16 @@ def create_process(
     command: list[str],
     cwd: Path | None = None,
     env: dict[str, str] | None = None,
-) -> subprocess.Popen[str]:
-    """Spawn a subprocess with stdout/stderr capture and no console flash."""
+    attach_stdin: bool = False,
+) -> subprocess.Popen[bytes]:
+    """Spawn a subprocess with stdout/stderr capture and no console flash.
+
+    The process is launched in binary mode so callers decode bytes
+    themselves (see :func:`ScriptExecutor._pump_stream`). Passing
+    ``attach_stdin=True`` allocates an input pipe so callers can write
+    to the child; otherwise stdin is closed and subsequent writes will
+    fail cleanly.
+    """
     creation_flags = 0
     startupinfo = None
     if os.name == "nt":
@@ -61,11 +69,8 @@ def create_process(
         command,
         stdout=subprocess.PIPE,
         stderr=subprocess.PIPE,
-        stdin=subprocess.PIPE,
-        text=True,
-        encoding="utf-8",
-        errors="replace",
-        bufsize=1,
+        stdin=subprocess.PIPE if attach_stdin else subprocess.DEVNULL,
+        bufsize=0,
         cwd=str(cwd) if cwd else None,
         env=env,
         shell=False,
@@ -94,20 +99,43 @@ def launch_detached(script_path: Path) -> None:
 
 
 def terminate_process(
-    process: subprocess.Popen[str], timeout: float = 2.0
+    process: subprocess.Popen[bytes] | subprocess.Popen[str],
+    timeout: float = 2.0,
 ) -> bool:
-    """Gracefully terminate a process, falling back to force kill."""
+    """Terminate a process and its descendants.
+
+    On Windows we must kill the **whole tree in a single call** via
+    ``taskkill /F /T``: batch scripts frequently spawn ``powershell.exe``
+    or other helpers, and once ``cmd.exe`` dies those grandchildren get
+    reparented and no longer appear in ``taskkill /T``'s walk. So we
+    issue the tree kill first, then wait for the parent to reap.
+    On other platforms we fall back to ``terminate`` -> ``kill``.
+    """
     if process.poll() is not None:
         return True
 
     try:
+        if os.name == "nt":
+            killed = _tree_kill_windows(process.pid)
+            try:
+                process.wait(timeout=timeout)
+            except subprocess.TimeoutExpired:
+                logger.warning("Parent still alive after tree kill; calling kill()")
+                process.kill()
+                try:
+                    process.wait(timeout=1.0)
+                except subprocess.TimeoutExpired:
+                    logger.error("Process failed to exit after tree kill + kill()")
+                    return False
+            return killed
+
         process.terminate()
         try:
             process.wait(timeout=timeout)
             logger.debug("Process terminated gracefully")
             return True
         except subprocess.TimeoutExpired:
-            logger.warning("Graceful termination timed out, force killing process")
+            logger.warning("Graceful termination timed out, force killing")
             process.kill()
             try:
                 process.wait(timeout=1.0)
@@ -117,4 +145,31 @@ def terminate_process(
             return True
     except Exception as e:  # noqa: BLE001
         logger.error(f"Failed to terminate process: {e}")
+        return False
+
+
+def _tree_kill_windows(pid: int) -> bool:
+    """Force-kill ``pid`` and every descendant via ``taskkill /F /T``.
+
+    No-op (returns True) on non-Windows. Returns True whenever the
+    ``taskkill`` call itself dispatched successfully — exit codes like
+    "process not found" still mean the goal (no running children) has
+    been met.
+    """
+    if os.name != "nt":
+        return True
+
+    creation_flags = getattr(subprocess, "CREATE_NO_WINDOW", 0)
+    try:
+        subprocess.run(
+            ["taskkill", "/F", "/T", "/PID", str(pid)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            timeout=5.0,
+            creationflags=creation_flags,
+            check=False,
+        )
+        return True
+    except (OSError, subprocess.TimeoutExpired) as e:
+        logger.warning(f"taskkill failed for PID {pid}: {e}")
         return False

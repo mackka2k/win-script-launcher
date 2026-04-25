@@ -4,6 +4,7 @@ A modern, keyboard-friendly GUI for discovering and running Windows scripts
 (`.py`, `.bat`, `.cmd`, `.ps1`) from a single dark-themed window. Built with
 CustomTkinter.
 
+[![CI](https://github.com/yourusername/win-script-launcher/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/win-script-launcher/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue.svg)](https://www.python.org/downloads/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
@@ -83,7 +84,7 @@ shows expected changes and backup targets, and each run writes an audit log to
 | `execution.max_output_lines`        | `10000` | Bounded, thread-safe output buffer per run.   |
 | `execution.run_batch_in_new_window` | `false` | If `true`, `.bat`/`.cmd` launch detached.     |
 | `enable_file_watcher`               | `true`  | Auto-refresh when `scripts/` changes.         |
-| `check_admin_on_startup`            | `true`  | Prompt to relaunch as admin if not elevated.  |
+| `check_admin_on_startup`            | `false` | Prompt to relaunch as admin if not elevated.  |
 | `log_level`                         | `INFO`  | `DEBUG` / `INFO` / `WARNING` / `ERROR`.       |
 
 Discovery cache is persisted separately in `cache.json` to keep user

@@ -79,16 +79,35 @@ class MainWindow:
         self._render_scripts(self._scripts)
         self.status_bar.set_right(self._script_summary(self._scripts))
 
+    def snapshot_geometry(self) -> None:
+        """Copy the current window size/position into ``self.config.window``.
+
+        Called before persisting config so ``remember_size`` /
+        ``remember_position`` survive restarts. Silently no-ops if the root
+        window has already been destroyed.
+        """
+        window_cfg = self.config.window
+        try:
+            self.root.update_idletasks()
+            width = self.root.winfo_width()
+            height = self.root.winfo_height()
+            x = self.root.winfo_x()
+            y = self.root.winfo_y()
+        except Exception:  # noqa: BLE001 - Tk may be torn down
+            return
+
+        if window_cfg.remember_size and width > 0 and height > 0:
+            window_cfg.width = width
+            window_cfg.height = height
+        if window_cfg.remember_position:
+            window_cfg.last_x = x
+            window_cfg.last_y = y
+
     # --- Internal: layout ---------------------------------------------
 
     def _build_ui(self) -> None:
         self.root.title("Script Launcher")
-        width = self.config.window.width
-        height = self.config.window.height
-        screen_w = self.root.winfo_screenwidth()
-        screen_h = self.root.winfo_screenheight()
-        x = max(0, (screen_w - width) // 2)
-        y = max(0, (screen_h - height) // 2)
+        width, height, x, y = self._initial_geometry()
         self.root.geometry(f"{width}x{height}+{x}+{y}")
         self.root.minsize(820, 560)
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
@@ -103,6 +122,36 @@ class MainWindow:
 
         self.status_bar = StatusBar(self.root)
         self.status_bar.grid(row=4, column=0, sticky="ew")
+
+    def _initial_geometry(self) -> tuple[int, int, int, int]:
+        """Compute ``(width, height, x, y)`` for the initial window placement.
+
+        Restores the saved position when ``remember_position`` is enabled and
+        the saved ``(x, y)`` still lands on the current desktop. Otherwise
+        the window is centered. Size always comes from ``config.window``
+        (which is updated on close when ``remember_size`` is true).
+        """
+        window_cfg = self.config.window
+        screen_w = self.root.winfo_screenwidth()
+        screen_h = self.root.winfo_screenheight()
+
+        width = window_cfg.width
+        height = window_cfg.height
+
+        saved_x = window_cfg.last_x
+        saved_y = window_cfg.last_y
+        if (
+            window_cfg.remember_position
+            and saved_x is not None
+            and saved_y is not None
+            and 0 <= saved_x <= max(0, screen_w - 100)
+            and 0 <= saved_y <= max(0, screen_h - 100)
+        ):
+            return width, height, saved_x, saved_y
+
+        x = max(0, (screen_w - width) // 2)
+        y = max(0, (screen_h - height) // 2)
+        return width, height, x, y
 
     def _build_header(self, row: int) -> None:
         frame = ctk.CTkFrame(self.root, fg_color="transparent")
